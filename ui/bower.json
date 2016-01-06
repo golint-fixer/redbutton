@@ -1,0 +1,17 @@
+{
+  "name": "redbutton",
+  "authors": [
+    "Viktoras Makauskas <viktoras@neglostyti.com>"
+  ],
+  "description": "",
+  "main": "",
+  "moduleType": [],
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "dependencies": {
+    "angular-websocket": "~1.0.14",
+    "bootstrap": "~3.3.6",
+    "less": "~2.5.3"
+  }
+}

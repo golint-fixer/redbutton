@@ -1,0 +1,7 @@
+bin
+ui/bower_components
+.idea
+redbutton.iml
+server/pkg
+server/src/github.com
+server/src/golang.org
