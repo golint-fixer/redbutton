@@ -9,7 +9,7 @@ function jsonHandler(handler){
 angular.module('redButtonApp', [
   'angular-websocket'
 ])
-.controller('mainCtrl', function ($scope, $websocket) {
+.controller('mainCtrl', function ($scope, $http, $websocket) {
 
     $scope.title="Loading..."
 
@@ -22,6 +22,8 @@ angular.module('redButtonApp', [
             return;
 
         $scope.roomStatus.happy=happy;
+
+        $http.post("vote/",{happy:happy})
     }
 
     // button handlers
@@ -31,6 +33,8 @@ angular.module('redButtonApp', [
     $scope.voteDown = function(){
         setHappy(false);
     }
+
+
 
     // start listening for room events
     $websocket("ws://"+window.location.host+'/events').onMessage(jsonHandler(function(roomInfo) {
