@@ -3,9 +3,9 @@ package redbutton
 import (
 	"fmt"
 	"github.com/go-martini/martini"
-	"github.com/martini-contrib/binding"
 	"github.com/gorilla/websocket"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/martini-contrib/binding"
 	"github.com/martini-contrib/render"
 	"github.com/martini-contrib/sessions"
 	"log"
@@ -94,10 +94,14 @@ func (this *Room) setHappy(voterId string, happy bool) {
 	this.notifyStatusChanged()
 }
 
-type server struct {
+type ServerConfig struct {
 	Port  string `envconfig:"PORT" default:"8081"`
 	UiDir string `envconfig:"UIDIR" default:"."`
-	room  *Room
+}
+
+type server struct {
+	ServerConfig
+	room *Room
 }
 
 var websocketUpgrader = websocket.Upgrader{}
@@ -128,43 +132,76 @@ func (this *server) roomEventListenerHandler(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-type VoteRequest struct {
-	Happy bool `json:"happy"`
+type VoterStatus struct {
+	Happy bool   `json:"happy"`
 }
 
 // voter ID comes from request
-func (this *server) handleVote(request VoteRequest, r render.Render, params martini.Params, sess sessions.Session) {
+func (this *server) handleChangeVoterStatus(request VoterStatus, r render.Render, params martini.Params, sess sessions.Session) {
+	voterId := params["voterId"]
+	if (voterId == "") {
+		r.JSON(400, nil) // TODO: better error handling
+		return
+	}
 	room := this.room // TODO: replace with room lookup
 
-	voterId := sess.Get("voterId").(string)
 	room.setHappy(voterId, request.Happy)
-	println("oh yeah", voterId, request.Happy)
-	r.JSON(200, &request)
+	this.getVoterStatus(params, r)
 }
 
-func Main() {
-	s := server{}
-	envconfig.Process("redbutton", &s)
-	s.UiDir, _ = filepath.Abs(s.UiDir)
+func (this *server) getVoterStatus(params martini.Params, r render.Render) {
+	result := VoterStatus{}
+	result.Happy = true
+	voterId := params["voterId"]
+	if _, ok := this.room.unhappyVotes[voterId]; ok {
+		result.Happy = false
+	}
+	r.JSON(200, &result)
+}
+
+type LoginResponse struct {
+	VoterId string `json:"voterId"`
+}
+
+// so far only a stub of login service; returns new voterId each time it's called
+func handleLogin(r render.Render) {
+	response := LoginResponse{
+		VoterId: voterId(),
+	}
+	r.JSON(200, &response)
+}
+
+func runServer(config ServerConfig) {
+	s := server{ServerConfig:config}
 	s.room = NewVotingRoom()
 	s.room.name = "Very Important Meeting"
-	fmt.Printf("config: port %s, ui: %s", s.Port, s.UiDir)
 
 	m := martini.Classic()
 	store := sessions.NewCookieStore([]byte("it's not really a secret"))
-	m.Use(sessions.Sessions("redbutton",store))
-	m.Use(func(ses sessions.Session){
+	m.Use(sessions.Sessions("redbutton", store))
+	m.Use(func(ses sessions.Session) {
 		id := ses.Get("voterId")
-		if id!=nil {
+		if id != nil {
 			return
 		}
 
-		ses.Set("voterId",voterId())
+		ses.Set("voterId", voterId())
 	})
 	m.Use(render.Renderer())
-	m.Use(martini.Static(s.UiDir, martini.StaticOptions{Prefix: ""}))
 	m.Get("/events", s.roomEventListenerHandler)
-	m.Post("/vote/", binding.Bind(VoteRequest{}), s.handleVote)
+	m.Post("/voter/:voterId", binding.Bind(VoterStatus{}), s.handleChangeVoterStatus)
+	m.Get("/voter/:voterId", s.getVoterStatus)
+	m.Post("/login", handleLogin)
+	m.Use(martini.Static(s.UiDir, martini.StaticOptions{Prefix: ""}))
 	m.RunOnAddr("0.0.0.0:" + s.Port)
+}
 
+func Main() {
+	config := ServerConfig{}
+	envconfig.Process("redbutton", &config)
+	config.UiDir, _ = filepath.Abs(config.UiDir)
+
+	fmt.Printf("config: port %s, ui: %s", config.Port, config.UiDir)
+
+	runServer(config)
 }

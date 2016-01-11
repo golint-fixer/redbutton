@@ -7,23 +7,54 @@ function jsonHandler(handler){
 }
 
 angular.module('redButtonApp', [
-  'angular-websocket'
+  'angular-websocket', 'ngCookies'
 ])
-.controller('mainCtrl', function ($scope, $http, $websocket) {
+.controller('mainCtrl', function ($scope, $http, $cookies, $websocket) {
 
     $scope.title="Loading..."
 
-    $scope.roomStatus = {
-        happy: true
+    $scope.roomStatus = null
+
+    var voterId = null;
+    function updateLogin(){
+        voterId = $cookies.get("voterId")
+        console.log("voterId", voterId)
+        if (voterId)
+            updateVoterStatus()
     }
+    updateLogin()
+
+    if (!voterId){
+        console.log("logging in...")
+        $http.post("login").then(function(res){
+            console.log("login data:",res.data)
+            $cookies.put("voterId",res.data.voterId)
+            updateLogin()
+        })
+    }
+
+
+    // retrieve room status for this room owner
+    function updateVoterStatus(){
+        if (!voterId)
+            return
+
+        console.log("updating voter status")
+        $http.get("voter/"+voterId).then(function (res){
+            console.log("voter status",res.data)
+            $scope.roomStatus = {happy:res.data.happy}
+        })
+    }
+
 
     function setHappy(happy){
         if ($scope.roomStatus.happy==happy)
             return;
 
-        $scope.roomStatus.happy=happy;
-
-        $http.post("vote/",{happy:happy})
+        $http.post("voter/"+voterId,{happy:happy}).then(function (res){
+            $scope.roomStatus = {happy:res.data.happy}
+            $scope.roomStatus=res.data;
+        })
     }
 
     // button handlers
@@ -46,5 +77,11 @@ angular.module('redButtonApp', [
         }
 
         $scope.marks = new Array(roomInfo.marks)
+
+        // something changed? maybe our own status on another window?
+        updateVoterStatus()
     }));
+
+
+
 });

@@ -12,5 +12,5 @@ func voterId() string {
 	h := sha256.New()
 	result := h.Sum([]byte(strconv.Itoa(rand.Int())))
 
-	return fmt.Sprintf("%x",result)
+	return fmt.Sprintf("%x", result)
 }

@@ -4,6 +4,6 @@
 package main
 import "redbutton"
 
-func main(){
+func main() {
 	redbutton.Main()
 }
