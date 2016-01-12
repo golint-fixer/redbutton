@@ -1,6 +1,5 @@
 package redbutton
 import (
-	"github.com/jmcvetta/napping"
 	"testing"
 	"github.com/stretchr/testify/require"
 	"time"
@@ -17,47 +16,31 @@ func serviceEndpoint() string {
 	return "http://0.0.0.0:9001"
 }
 
-func assertResponse(t *testing.T, resp *napping.Response, err error, expectedHttpCode int) {
-	require.NoError(t, err)
-	require.Equal(t, resp.Status(), expectedHttpCode)
-}
 
 func TestLogin(t *testing.T) {
-	response := LoginResponse{}
-	resp, err := napping.Post(serviceEndpoint() + "/login", &struct{}{}, &response, nil)
-	assertResponse(t, resp, err, 200)
+	c := newApiClient(t)
+	response := c.login()
+	require.NotEqual(t,"",response.VoterId)
 }
 
 func TestGetVoterStatus(t *testing.T) {
-	loginResponse := LoginResponse{}
-	{
-		// login
-		resp, err := napping.Post(serviceEndpoint() + "/login", &struct{}{}, &loginResponse, nil)
-		assertResponse(t, resp, err, 200)
-	}
-
+	c := newApiClient(t)
+	loginResponse := c.login()
 	{
 		// get voter status: happy by default
-		s := VoterStatus{}
-		resp, err := napping.Get(serviceEndpoint() + "/voter/" + loginResponse.VoterId, nil, &s, nil)
-		assertResponse(t, resp, err, 200)
+		s := c.getVoterStatus(loginResponse.VoterId)
 		require.True(t, s.Happy)
 	}
 
 	{
 		// set status to unhappy
-		s := VoterStatus{Happy:false}
-		r := VoterStatus{}
-		resp, err := napping.Post(serviceEndpoint() + "/voter/" + loginResponse.VoterId, &s, &r, nil)
-		assertResponse(t, resp, err, 200)
+		r := c.updateVoterStatus(loginResponse.VoterId,VoterStatus{Happy:false})
 		require.False(t, r.Happy)
 	}
 
 	{
-		s := VoterStatus{}
-		resp, err := napping.Get(serviceEndpoint() + "/voter/" + loginResponse.VoterId, nil, &s, nil)
-		assertResponse(t, resp, err, 200)
 		// should be unhappy now
+		s := c.getVoterStatus(loginResponse.VoterId)
 		require.False(t, s.Happy)
 	}
 
