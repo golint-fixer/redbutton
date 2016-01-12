@@ -20,7 +20,7 @@ func serviceEndpoint() string {
 func TestLogin(t *testing.T) {
 	c := newApiClient(t)
 	response := c.login()
-	require.NotEqual(t,"",response.VoterId)
+	require.NotEqual(t, "", response.VoterId)
 }
 
 func TestGetVoterStatus(t *testing.T) {
@@ -34,7 +34,7 @@ func TestGetVoterStatus(t *testing.T) {
 
 	{
 		// set status to unhappy
-		r := c.updateVoterStatus(loginResponse.VoterId,VoterStatus{Happy:false})
+		r := c.updateVoterStatus(loginResponse.VoterId, VoterStatus{Happy:false})
 		require.False(t, r.Happy)
 	}
 

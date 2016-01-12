@@ -8,7 +8,7 @@ import (
 
 type ApiClient struct {
 	serviceEndpoint string
-	t *testing.T
+	t               *testing.T
 }
 
 func (this *ApiClient) assertResponse(resp *napping.Response, err error, expectedHttpCode int) {
@@ -23,21 +23,21 @@ func (this *ApiClient) login() LoginResponse {
 	return result
 }
 
-func (this *ApiClient) getVoterStatus(voterId string) VoterStatus{
+func (this *ApiClient) getVoterStatus(voterId string) VoterStatus {
 	s := VoterStatus{}
 	resp, err := napping.Get(serviceEndpoint() + "/voter/" + voterId, nil, &s, nil)
 	this.assertResponse(resp, err, 200)
 	return s
 }
 
-func (this *ApiClient) updateVoterStatus(voterId string, update VoterStatus) VoterStatus{
+func (this *ApiClient) updateVoterStatus(voterId string, update VoterStatus) VoterStatus {
 	result := VoterStatus{}
 	resp, err := napping.Post(serviceEndpoint() + "/voter/" + voterId, &update, &result, nil)
 	this.assertResponse(resp, err, 200)
 	return result
 }
 
-func newApiClient(t *testing.T) *ApiClient{
+func newApiClient(t *testing.T) *ApiClient {
 	return &ApiClient{
 		t:t,
 		serviceEndpoint:serviceEndpoint(),
