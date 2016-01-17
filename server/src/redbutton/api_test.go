@@ -18,21 +18,21 @@ func (this *ApiClient) assertResponse(resp *napping.Response, err error, expecte
 
 func (this *ApiClient) login() LoginResponse {
 	result := LoginResponse{}
-	resp, err := napping.Post(serviceEndpoint() + "/login", &struct{}{}, &result, nil)
+	resp, err := napping.Post(this.serviceEndpoint + "/login", &struct{}{}, &result, nil)
 	this.assertResponse(resp, err, 200)
 	return result
 }
 
-func (this *ApiClient) getVoterStatus(voterId string) VoterStatus {
+func (this *ApiClient) getVoterStatus(roomId string, voterId string) VoterStatus {
 	s := VoterStatus{}
-	resp, err := napping.Get(serviceEndpoint() + "/voter/" + voterId, nil, &s, nil)
+	resp, err := napping.Get(this.serviceEndpoint + "/room/"+roomId+"/voter/" + voterId, nil, &s, nil)
 	this.assertResponse(resp, err, 200)
 	return s
 }
 
-func (this *ApiClient) updateVoterStatus(voterId string, update VoterStatus) VoterStatus {
+func (this *ApiClient) updateVoterStatus(roomId string, voterId string, update VoterStatus) VoterStatus {
 	result := VoterStatus{}
-	resp, err := napping.Post(serviceEndpoint() + "/voter/" + voterId, &update, &result, nil)
+	resp, err := napping.Post(this.serviceEndpoint + "/room/"+roomId+"/voter/" + voterId, &update, &result, nil)
 	this.assertResponse(resp, err, 200)
 	return result
 }
@@ -40,7 +40,7 @@ func (this *ApiClient) updateVoterStatus(voterId string, update VoterStatus) Vot
 func newApiClient(t *testing.T) *ApiClient {
 	return &ApiClient{
 		t:t,
-		serviceEndpoint:serviceEndpoint(),
+		serviceEndpoint: "http://0.0.0.0:"+testServerConfig.Port,
 	}
 
 }

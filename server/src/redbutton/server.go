@@ -101,7 +101,7 @@ type ServerConfig struct {
 
 type server struct {
 	ServerConfig
-	room *Room
+	rooms map[string]*Room
 }
 
 var websocketUpgrader = websocket.Upgrader{}
@@ -109,14 +109,17 @@ var websocketUpgrader = websocket.Upgrader{}
 /**
 this handler reports room events into provided websocket connection
 */
-func (this *server) roomEventListenerHandler(w http.ResponseWriter, r *http.Request) {
+func (this *server) roomEventListenerHandler(params martini.Params, w http.ResponseWriter, r *http.Request, ren render.Render) {
 	ws, err := websocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		return
 	}
 	defer ws.Close()
 
-	room := this.room
+	room, err := this.lookupRoomFromRequest(params)
+	if err!=nil {
+		return
+	}
 
 	listener := NewRoomListener(ws, room)
 	room.registerListener(listener)
@@ -133,27 +136,50 @@ func (this *server) roomEventListenerHandler(w http.ResponseWriter, r *http.Requ
 }
 
 type VoterStatus struct {
-	Happy bool   `json:"happy"`
+	Happy bool `json:"happy"`
+}
+
+func (this *server) lookupRoomFromRequest(params martini.Params) (*Room, error) {
+	roomId := params["roomId"]
+	if roomId == "" {
+		return nil, ApiError{}.badRequest("room ID not found")
+	}
+
+	if _, ok := this.rooms[roomId]; !ok {
+		return nil, ApiError{}.notFound("room "+roomId+" was not found")
+	}
+
+	return this.rooms[roomId], nil
 }
 
 // voter ID comes from request
 func (this *server) handleChangeVoterStatus(request VoterStatus, r render.Render, params martini.Params, sess sessions.Session) {
 	voterId := params["voterId"]
-	if (voterId == "") {
+	if voterId == "" {
 		r.JSON(400, nil) // TODO: better error handling
 		return
 	}
-	room := this.room // TODO: replace with room lookup
+	room, err := this.lookupRoomFromRequest(params)
+	if err!=nil {
+		respondWithError(err, r)
+		return
+	}
 
 	room.setHappy(voterId, request.Happy)
 	this.getVoterStatus(params, r)
 }
 
 func (this *server) getVoterStatus(params martini.Params, r render.Render) {
+	room, err := this.lookupRoomFromRequest(params)
+	if err!=nil {
+		respondWithError(err, r)
+		return
+	}
+
 	result := VoterStatus{}
 	result.Happy = true
 	voterId := params["voterId"]
-	if _, ok := this.room.unhappyVotes[voterId]; ok {
+	if _, ok := room.unhappyVotes[voterId]; ok {
 		result.Happy = false
 	}
 	r.JSON(200, &result)
@@ -172,9 +198,11 @@ func handleLogin(r render.Render) {
 }
 
 func runServer(config ServerConfig) {
-	s := server{ServerConfig:config}
-	s.room = NewVotingRoom()
-	s.room.name = "Very Important Meeting"
+	s := server{ServerConfig: config, rooms: map[string]*Room{}}
+
+	room := NewVotingRoom()
+	room.name = "Very Important Meeting"
+	s.rooms["default"] = room
 
 	m := martini.Classic()
 	store := sessions.NewCookieStore([]byte("it's not really a secret"))
@@ -189,8 +217,8 @@ func runServer(config ServerConfig) {
 	})
 	m.Use(render.Renderer())
 	m.Get("/events", s.roomEventListenerHandler)
-	m.Post("/voter/:voterId", binding.Bind(VoterStatus{}), s.handleChangeVoterStatus)
-	m.Get("/voter/:voterId", s.getVoterStatus)
+	m.Post("/room/:roomId/voter/:voterId", binding.Bind(VoterStatus{}), s.handleChangeVoterStatus)
+	m.Get("/room/:roomId/voter/:voterId", s.getVoterStatus)
 	m.Post("/login", handleLogin)
 	m.Use(martini.Static(s.UiDir, martini.StaticOptions{Prefix: ""}))
 	m.RunOnAddr("0.0.0.0:" + s.Port)
