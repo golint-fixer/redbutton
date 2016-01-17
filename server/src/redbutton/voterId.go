@@ -8,7 +8,7 @@ import (
 
 
 // generate a random voter ID
-func voterId() string {
+func uniqueId() string {
 	h := sha256.New()
 	result := h.Sum([]byte(strconv.Itoa(rand.Int())))
 

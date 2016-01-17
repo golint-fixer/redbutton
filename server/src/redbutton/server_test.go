@@ -4,6 +4,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"time"
 	"github.com/jmcvetta/napping"
+	"redbutton/api"
 )
 
 var testServerConfig = ServerConfig{
@@ -43,7 +44,7 @@ func TestGetVoterStatus(t *testing.T) {
 
 	{
 		// set status to unhappy
-		r := c.updateVoterStatus(roomId,loginResponse.VoterId, VoterStatus{Happy:false})
+		r := c.updateVoterStatus(roomId,loginResponse.VoterId, api.VoterStatus{Happy:false})
 		require.False(t, r.Happy)
 	}
 
@@ -53,4 +54,17 @@ func TestGetVoterStatus(t *testing.T) {
 		require.False(t, s.Happy)
 	}
 
+}
+
+func TestNewRoom(t *testing.T) {
+	c := newApiClient(t)
+	loginResponse := c.login()
+	result := c.createNewRoom(api.RoomInfo{RoomName:"another room",RoomOwner:loginResponse.VoterId})
+	require.NotEqual(t,result.Id,"")
+	require.Equal(t,result.RoomName,"another room")
+	require.Equal(t,result.RoomOwner,loginResponse.VoterId)
+
+	result2 := c.getRoomInfo(result.Id)
+	require.Equal(t,result2.RoomName,"another room")
+	require.Equal(t,result2.RoomOwner,loginResponse.VoterId)
 }
