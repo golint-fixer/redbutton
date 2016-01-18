@@ -7,51 +7,86 @@ function jsonHandler(handler){
 }
 
 angular.module('redButtonApp', [
-  'angular-websocket', 'ngCookies'
+  'angular-websocket',
+  'ngCookies',
+  'ui.router'
 ])
-.controller('mainCtrl', function ($scope, $http, $cookies, $websocket) {
+.config(function($stateProvider){
+  $stateProvider
+    .state('index', {
+      url: "",
+      templateUrl: "pages/new-room.html",
+      controller: "newRoomCtrl"
+    })
+    .state('room-detail', {
+      url: "/room/:roomId",
+      templateUrl: "pages/room.html",
+      controller: "roomCtrl"
+    })
+
+})
+.controller('mainCtrl', function ($scope, $http, $cookies) {
 
     $scope.title="Loading..."
 
-    $scope.roomStatus = null
-
-    var voterId = null;
+    $scope.voterId = null;
     function updateLogin(){
-        voterId = $cookies.get("voterId")
-        console.log("voterId", voterId)
-        if (voterId)
-            updateVoterStatus()
+        $scope.voterId = $cookies.get("voterId")
+        if ($scope.voterId)
+            $scope.$broadcast("logged-in")
     }
     updateLogin()
 
-    if (!voterId){
-        console.log("logging in...")
-        $http.post("login").then(function(res){
-            console.log("login data:",res.data)
+    if (!$scope.voterId){
+        $http.post("api/login").then(function(res){
             $cookies.put("voterId",res.data.voterId)
             updateLogin()
         })
     }
 
+})
+
+
+.controller('roomCtrl', function ($scope, $http, $websocket, $stateParams) {
+    var roomId = $stateParams.roomId
+
+    $scope.roomStatus = null
+
+    $scope.$on('logged-in', function() {
+        updateVoterStatus()
+    });
+
 
     // retrieve room status for this room owner
     function updateVoterStatus(){
-        if (!voterId)
+        if (!$scope.voterId)
             return
 
-        console.log("updating voter status")
-        $http.get("voter/"+voterId).then(function (res){
-            console.log("voter status",res.data)
+        $http.get("api/room/"+roomId+"/voter/"+$scope.voterId).then(function (res){
             $scope.roomStatus = {happy:res.data.happy}
         })
     }
 
+    // start listening for room events
+    $websocket("ws://"+window.location.host+'/api/events/'+$stateParams.roomId).onMessage(jsonHandler(function(roomInfo) {
+        $scope.roomInfo = roomInfo
+
+        $scope.title = roomInfo.name
+        if (roomInfo.marks>0){
+            $scope.title = '('+roomInfo.marks+') '+$scope.title
+        }
+
+        $scope.marks = new Array(roomInfo.marks)
+
+        // something changed? maybe our own status on another window?
+        updateVoterStatus()
+    }))
 
     function setHappy(happy){
         if ($scope.roomStatus.happy==happy)
             return;
 
-        $http.post("voter/"+voterId,{happy:happy}).then(function (res){
+        $http.post("api/room/"+roomId+"/voter/"+$scope.voterId,{happy:happy}).then(function (res){
             $scope.roomStatus = {happy:res.data.happy}
             $scope.roomStatus=res.data;
         })
@@ -65,23 +100,32 @@ angular.module('redButtonApp', [
         setHappy(false);
     }
 
+})
 
 
-    // start listening for room events
-    $websocket("ws://"+window.location.host+'/events').onMessage(jsonHandler(function(roomInfo) {
-        $scope.roomInfo = roomInfo
+.controller('newRoomCtrl', function ($scope, $http, $state) {
+    $scope.room = {name:""}
 
-        $scope.title = roomInfo.name
-        if (roomInfo.marks>0){
-            $scope.title = '('+roomInfo.marks+') '+$scope.title
-        }
+    function setError(error){
+        $scope.errorMessage = error
+    }
 
-        $scope.marks = new Array(roomInfo.marks)
+    // form post: create room
+    $scope.createRoom = function (){
+        setError(null)
+        $http.post("api/room/", {name: $scope.room.name, owner: $scope.voterId}).then(createRoomCallback,errorCallback)
+    }
 
-        // something changed? maybe our own status on another window?
-        updateVoterStatus()
-    }));
+    function createRoomCallback(res){
+        var room = res.data
+        $state.go("room-detail",{roomId:room.id})
+    }
+
+    function errorCallback(err) {
+        console.log("error!",err)
+        setError(err.data.message)
+    }
 
 
 
-});
+})

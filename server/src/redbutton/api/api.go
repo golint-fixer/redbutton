@@ -16,8 +16,8 @@ type (
 	}
 
 	RoomInfo struct {
-		Id        string `json: "id"`
-		RoomName  string `json: "name"`
-		RoomOwner string `json: "owner"`
+		Id        string `json:"id"`
+		RoomName  string `json:"name"`
+		RoomOwner string `json:"owner"`
 	}
 )

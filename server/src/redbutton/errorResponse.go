@@ -16,25 +16,25 @@ func (this ApiError) Error() string {
 	return this.Message+"("+strconv.Itoa(this.httpCode)+")"
 }
 
-func (this ApiError) httpError(message string, code int) ApiError {
+func (this ApiError) httpError(message string, code int) error {
 	this.Message = message
 	this.httpCode = code
-	return this
+	return &this
 }
 
-func (this ApiError) badRequest(message string) ApiError {
+func (this ApiError) badRequest(message string) error {
 	return this.httpError(message, http.StatusBadRequest)
 }
 
-func (this ApiError) notFound(message string) ApiError {
+func (this ApiError) notFound(message string) error {
 	return this.httpError(message, http.StatusNotFound)
 }
 
 // analyses error contents and returns an error
 func respondWithError(err error, r render.Render) {
-	apiError, ok := err.(ApiError)
+	apiError, ok := err.(*ApiError)
 	if !ok {
-		apiError = ApiError{Message: err.Error(), httpCode: http.StatusInternalServerError}
+		apiError = &ApiError{Message: err.Error(), httpCode: http.StatusInternalServerError}
 	}
 	log.Println("responding with error: ", apiError.httpCode, apiError.Message)
 	r.JSON(apiError.httpCode,apiError)

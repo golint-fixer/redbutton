@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"redbutton/api"
+	"strings"
 )
 
 // an entity that is interested in room events
@@ -164,6 +165,14 @@ func (this *server) handleChangeVoterStatus(request api.VoterStatus, r render.Re
 func (this *server) createRoom(info api.RoomInfo, r render.Render) {
 	id := uniqueId()
 	log.Println("creating room", id)
+
+	info.RoomName = strings.TrimSpace(info.RoomName)
+	if info.RoomName=="" {
+		respondWithError(ApiError{}.badRequest("Room name is missing"),r)
+		return
+	}
+
+
 	room := NewVotingRoom()
 	this.rooms[id] = room
 	room.id = id
@@ -222,12 +231,14 @@ func runServer(config ServerConfig) {
 
 	m := martini.Classic()
 	m.Use(render.Renderer())
-	m.Get("/events", s.roomEventListenerHandler)
-	m.Post("/room/:roomId/voter/:voterId", binding.Bind(api.VoterStatus{}), s.handleChangeVoterStatus)
-	m.Get("/room/:roomId/voter/:voterId", s.getVoterStatus)
-	m.Get("/room/:roomId", s.getRoomInfo)
-	m.Post("/room", binding.Bind(api.RoomInfo{}), s.createRoom)
-	m.Post("/login", handleLogin)
+	m.Group("/api",func(r martini.Router){
+		r.Get("/events/:roomId", s.roomEventListenerHandler)
+		r.Post("/room/:roomId/voter/:voterId", binding.Bind(api.VoterStatus{}), s.handleChangeVoterStatus)
+		r.Get("/room/:roomId/voter/:voterId", s.getVoterStatus)
+		r.Get("/room/:roomId", s.getRoomInfo)
+		r.Post("/room", binding.Bind(api.RoomInfo{}), s.createRoom)
+		r.Post("/login", handleLogin)
+	})
 	m.Use(martini.Static(s.UiDir, martini.StaticOptions{Prefix: ""}))
 	m.RunOnAddr("0.0.0.0:" + s.Port)
 }
