@@ -2,7 +2,6 @@ package redbutton
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/kelseyhightower/envconfig"
 	"log"
@@ -10,7 +9,20 @@ import (
 	"path/filepath"
 	"redbutton/api"
 	"strings"
+	"crypto/sha256"
+	"strconv"
+	"crypto/rand"
 )
+
+
+
+// generate a random voter ID
+func uniqueId() string {
+	h := sha256.New()
+	result := h.Sum([]byte(strconv.Itoa(rand.Int())))
+
+	return fmt.Sprintf("%x", result)
+}
 
 // an entity that is interested in room events
 // receives notifications via provided websocket connection
@@ -222,28 +234,6 @@ func (this *server) getVoterStatus(c *api.HttpHandlerContext) {
 	c.Result(&result)
 }
 
-// so far only a stub of login service; returns new voterId each time it's called
-
-func (this *server) router() http.Handler {
-	m := mux.NewRouter()
-
-	r := api.NewRouteWrapper(m.PathPrefix("/api").Subrouter())
-
-	r.Post("/login", func(c *api.HttpHandlerContext) {
-		c.Result(&api.LoginResponse{
-			VoterId: uniqueId(),
-		})
-	})
-
-	r.Post("/room", this.createRoom)
-	r.Get("/room/{roomId}", this.getRoomInfo)
-	r.Get("/room/{roomId}/voter/{voterId}", this.getVoterStatus)
-	r.Post("/room/{roomId}/voter/{voterId}", this.handleChangeVoterStatus)
-	r.Router.Methods("GET").Path("/events/{roomId}").HandlerFunc(this.roomEventListenerHandler)
-	m.PathPrefix("/").Handler(http.FileServer(http.Dir(this.UiDir)))
-
-	return m
-}
 
 func runServer(config ServerConfig) {
 	s := server{ServerConfig: config, rooms: map[string]*Room{}}
@@ -252,7 +242,7 @@ func runServer(config ServerConfig) {
 	room.name = "Very Important Meeting"
 	s.rooms["default"] = room
 
-	http.Handle("/", s.router())
+	http.Handle("/", router(&s))
 	http.ListenAndServe(":"+s.Port, nil)
 }
 
