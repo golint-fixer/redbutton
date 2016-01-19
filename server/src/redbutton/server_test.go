@@ -35,7 +35,7 @@ func Test_invalidRoomId(t *testing.T){
 func Test_lowercaseApi(t *testing.T){
 	result := map[string]string {}
 	c := newApiClient(t)
-	resp,err := napping.Post(c.serviceEndpoint + "/room/", map[string]string{"name":"whatever"}, &result, nil)
+	resp,err := napping.Post(c.serviceEndpoint + "/room", map[string]string{"name":"whatever"}, &result, nil)
 	require.NoError(t,err)
 	require.Equal(t,resp.Status(),201)
 	require.Equal(t,"whatever",result["name"])

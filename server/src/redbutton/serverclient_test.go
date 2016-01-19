@@ -57,7 +57,7 @@ func (this *ApiClient) updateVoterStatus(roomId string, voterId string, update a
 
 func (this *ApiClient) createNewRoom(info api.RoomInfo) api.RoomInfo {
 	result := api.RoomInfo{}
-	this.remember(napping.Post(this.serviceEndpoint+"/room/", &info, &result, nil))
+	this.remember(napping.Post(this.serviceEndpoint+"/room", &info, &result, nil))
 	return result
 }
 

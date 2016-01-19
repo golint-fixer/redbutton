@@ -2,11 +2,9 @@ package redbutton
 
 import (
 	"fmt"
-	"github.com/go-martini/martini"
+	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/martini-contrib/binding"
-	"github.com/martini-contrib/render"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -106,15 +104,16 @@ var websocketUpgrader = websocket.Upgrader{}
 /**
 this handler reports room events into provided websocket connection
 */
-func (this *server) roomEventListenerHandler(params martini.Params, w http.ResponseWriter, r *http.Request, ren render.Render) {
-	ws, err := websocketUpgrader.Upgrade(w, r, nil)
+func (this *server) roomEventListenerHandler(resp http.ResponseWriter, req *http.Request) {
+	ws, err := websocketUpgrader.Upgrade(resp, req, nil)
 	if err != nil {
 		return
 	}
 	defer ws.Close()
 
-	room, err := this.lookupRoomFromRequest(params)
-	if err != nil {
+	c := api.NewHandler(req)
+	room := this.lookupRoomFromRequest(c)
+	if room == nil {
 		return
 	}
 
@@ -132,46 +131,55 @@ func (this *server) roomEventListenerHandler(params martini.Params, w http.Respo
 	}
 }
 
-func (this *server) lookupRoomFromRequest(params martini.Params) (*Room, error) {
-	roomId := params["roomId"]
+func (this *server) lookupRoomFromRequest(c *api.HttpHandlerContext) *Room {
+	roomId := c.PathParam("roomId")
 	if roomId == "" {
-		return nil, ApiError{}.badRequest("room ID not found")
+		c.Error(http.StatusBadRequest, "room ID not found")
+		return nil
 	}
 
 	if _, ok := this.rooms[roomId]; !ok {
-		return nil, ApiError{}.notFound("room " + roomId + " was not found")
+		c.Error(http.StatusNotFound, "room "+roomId+" was not found")
+		return nil
 	}
 
-	return this.rooms[roomId], nil
+	return this.rooms[roomId]
 }
 
 // voter ID comes from request
-func (this *server) handleChangeVoterStatus(request api.VoterStatus, r render.Render, params martini.Params) {
-	voterId := params["voterId"]
+func (this *server) handleChangeVoterStatus(c *api.HttpHandlerContext) {
+	voterId := c.PathParam("voterId")
 	if voterId == "" {
-		r.JSON(400, nil) // TODO: better error handling
+		c.Error(http.StatusBadRequest, "voter ID missing")
 		return
 	}
-	room, err := this.lookupRoomFromRequest(params)
-	if err != nil {
-		respondWithError(err, r)
+	room := this.lookupRoomFromRequest(c)
+	if room == nil {
+		return
+	}
+
+	request := api.VoterStatus{}
+	if !c.ParseRequest(&request) {
 		return
 	}
 
 	room.setHappy(voterId, request.Happy)
-	this.getVoterStatus(params, r)
+	this.getVoterStatus(c)
 }
 
-func (this *server) createRoom(info api.RoomInfo, r render.Render) {
+func (this *server) createRoom(c *api.HttpHandlerContext) {
 	id := uniqueId()
 	log.Println("creating room", id)
 
-	info.RoomName = strings.TrimSpace(info.RoomName)
-	if info.RoomName=="" {
-		respondWithError(ApiError{}.badRequest("Room name is missing"),r)
+	info := api.RoomInfo{}
+	if !c.ParseRequest(&info) {
 		return
 	}
-
+	info.RoomName = strings.TrimSpace(info.RoomName)
+	if info.RoomName == "" {
+		c.Error(http.StatusBadRequest, "Room name is missing")
+		return
+	}
 
 	room := NewVotingRoom()
 	this.rooms[id] = room
@@ -179,47 +187,48 @@ func (this *server) createRoom(info api.RoomInfo, r render.Render) {
 	room.owner = info.RoomOwner
 	room.name = info.RoomName
 
-	r.Status(http.StatusCreated)
-	this.getRoomInfo(martini.Params{"roomId": id}, r)
+
+	c.Status(http.StatusCreated).Result(this.mapRoomInfo(room))
 }
 
-func (this *server) getRoomInfo(params martini.Params, r render.Render) {
-	room, err := this.lookupRoomFromRequest(params)
-	if err != nil {
-		respondWithError(err, r)
+func (this *server) getRoomInfo(c *api.HttpHandlerContext) {
+	room := this.lookupRoomFromRequest(c)
+	if room == nil {
 		return
 	}
 
+	c.Result(this.mapRoomInfo(room))
+}
+
+func (this *server) mapRoomInfo(room *Room) *api.RoomInfo{
 	info := api.RoomInfo{}
 	info.Id = room.id
 	info.RoomName = room.name
 	info.RoomOwner = room.owner
-
-	r.JSON(http.StatusOK, &info)
+	return &info
 }
 
-func (this *server) getVoterStatus(params martini.Params, r render.Render) {
-	room, err := this.lookupRoomFromRequest(params)
-	if err != nil {
-		respondWithError(err, r)
+
+func (this *server) getVoterStatus(c *api.HttpHandlerContext) {
+	room := this.lookupRoomFromRequest(c)
+	if room == nil {
 		return
 	}
 
 	result := api.VoterStatus{}
 	result.Happy = true
-	voterId := params["voterId"]
+	voterId := c.PathParam("voterId")
 	if _, ok := room.unhappyVotes[voterId]; ok {
 		result.Happy = false
 	}
-	r.JSON(200, &result)
+	c.Result(&result)
 }
 
 // so far only a stub of login service; returns new voterId each time it's called
-func handleLogin(r render.Render) {
-	response := api.LoginResponse{
+func handleLogin(c *api.HttpHandlerContext) {
+	c.Result(&api.LoginResponse{
 		VoterId: uniqueId(),
-	}
-	r.JSON(200, &response)
+	})
 }
 
 func runServer(config ServerConfig) {
@@ -229,18 +238,22 @@ func runServer(config ServerConfig) {
 	room.name = "Very Important Meeting"
 	s.rooms["default"] = room
 
-	m := martini.Classic()
-	m.Use(render.Renderer())
-	m.Group("/api",func(r martini.Router){
-		r.Get("/events/:roomId", s.roomEventListenerHandler)
-		r.Post("/room/:roomId/voter/:voterId", binding.Bind(api.VoterStatus{}), s.handleChangeVoterStatus)
-		r.Get("/room/:roomId/voter/:voterId", s.getVoterStatus)
-		r.Get("/room/:roomId", s.getRoomInfo)
-		r.Post("/room", binding.Bind(api.RoomInfo{}), s.createRoom)
-		r.Post("/login", handleLogin)
-	})
-	m.Use(martini.Static(s.UiDir, martini.StaticOptions{Prefix: ""}))
-	m.RunOnAddr("0.0.0.0:" + s.Port)
+	m := mux.NewRouter()
+	apiRoutes := m.PathPrefix("/api").Subrouter()
+	apiRoutes.Methods("POST").Path("/login").HandlerFunc(api.Wrap(handleLogin))
+	apiRoutes.Methods("GET").Path("/events/{roomId}").HandlerFunc(s.roomEventListenerHandler)
+	apiRoutes.Methods("POST").Path("/room/{roomId}/voter/{voterId}").HandlerFunc(api.Wrap(s.handleChangeVoterStatus))
+	apiRoutes.Methods("GET").Path("/room/{roomId}/voter/{voterId}").HandlerFunc(api.Wrap(s.getVoterStatus))
+	apiRoutes.Methods("GET").Path("/room/{roomId}").HandlerFunc(api.Wrap(s.getRoomInfo))
+	apiRoutes.Methods("POST").Path("/room").HandlerFunc(api.Wrap(s.createRoom))
+	m.PathPrefix("/").Handler(http.FileServer(http.Dir(s.UiDir)))
+	/*	m.Group("/api",func(r martini.Router){
+			r.Post("/login", api.Wrap(handleLogin))
+		})
+		m.Use(martini.Static(s.UiDir, martini.StaticOptions{Prefix: ""}))
+	*/
+	http.Handle("/", m)
+	http.ListenAndServe(":"+s.Port, nil)
 }
 
 func Main() {

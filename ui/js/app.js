@@ -113,7 +113,7 @@ angular.module('redButtonApp', [
     // form post: create room
     $scope.createRoom = function (){
         setError(null)
-        $http.post("api/room/", {name: $scope.room.name, owner: $scope.voterId}).then(createRoomCallback,errorCallback)
+        $http.post("api/room", {name: $scope.room.name, owner: $scope.voterId}).then(createRoomCallback,errorCallback)
     }
 
     function createRoomCallback(res){
