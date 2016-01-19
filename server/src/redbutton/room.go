@@ -46,6 +46,7 @@ func NewRoom() *Room {
 	}
 }
 
+// TODO: http layer ideally should not be in this file at all
 func roomAsJson(room *Room) *api.RoomInfo {
 	info := api.RoomInfo{}
 	info.Id = room.id

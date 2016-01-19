@@ -33,15 +33,14 @@ type ServerConfig struct {
 type server struct {
 	ServerConfig
 	rooms map[string]*Room
+	websocketUpgrader websocket.Upgrader
 }
-
-var websocketUpgrader = websocket.Upgrader{}
 
 /**
 this handler reports room events into provided websocket connection
 */
 func (this *server) roomEventListenerHandler(resp http.ResponseWriter, req *http.Request) {
-	ws, err := websocketUpgrader.Upgrade(resp, req, nil)
+	ws, err := this.websocketUpgrader.Upgrade(resp, req, nil)
 	if err != nil {
 		return
 	}
@@ -154,6 +153,7 @@ func (this *server) getVoterStatus(c *api.HttpHandlerContext) {
 func runServer(config ServerConfig) {
 	s := server{ServerConfig: config, rooms: map[string]*Room{}}
 
+	s.websocketUpgrader = websocket.Upgrader{}
 	room := NewRoom()
 	room.name = "Very Important Meeting"
 	s.rooms["default"] = room
