@@ -24,7 +24,7 @@ func TestLogin(t *testing.T) {
 	require.NotEqual(t, "", response.VoterId)
 }
 
-func Test_invalidRoomId(t *testing.T){
+func TestInvalidRoomId(t *testing.T){
 	c := newApiClient(t)
 	loginResponse := c.login()
 	resp,err := napping.Get(c.serviceEndpoint + "/room/whatever/voter/" + loginResponse.VoterId, nil, nil, nil)
@@ -32,7 +32,7 @@ func Test_invalidRoomId(t *testing.T){
 	require.Equal(t,resp.Status(),404)
 }
 
-func Test_lowercaseApi(t *testing.T){
+func TestLowercaseApi(t *testing.T){
 	result := map[string]string {}
 	c := newApiClient(t)
 	resp,err := napping.Post(c.serviceEndpoint + "/room", map[string]string{"name":"whatever"}, &result, nil)

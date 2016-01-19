@@ -187,7 +187,6 @@ func (this *server) createRoom(c *api.HttpHandlerContext) {
 	room.owner = info.RoomOwner
 	room.name = info.RoomName
 
-
 	c.Status(http.StatusCreated).Result(this.mapRoomInfo(room))
 }
 
@@ -200,14 +199,13 @@ func (this *server) getRoomInfo(c *api.HttpHandlerContext) {
 	c.Result(this.mapRoomInfo(room))
 }
 
-func (this *server) mapRoomInfo(room *Room) *api.RoomInfo{
+func (this *server) mapRoomInfo(room *Room) *api.RoomInfo {
 	info := api.RoomInfo{}
 	info.Id = room.id
 	info.RoomName = room.name
 	info.RoomOwner = room.owner
 	return &info
 }
-
 
 func (this *server) getVoterStatus(c *api.HttpHandlerContext) {
 	room := this.lookupRoomFromRequest(c)
@@ -225,10 +223,26 @@ func (this *server) getVoterStatus(c *api.HttpHandlerContext) {
 }
 
 // so far only a stub of login service; returns new voterId each time it's called
-func handleLogin(c *api.HttpHandlerContext) {
-	c.Result(&api.LoginResponse{
-		VoterId: uniqueId(),
+
+func (this *server) router() http.Handler {
+	m := mux.NewRouter()
+
+	r := api.NewRouteWrapper(m.PathPrefix("/api").Subrouter())
+
+	r.Post("/login", func(c *api.HttpHandlerContext) {
+		c.Result(&api.LoginResponse{
+			VoterId: uniqueId(),
+		})
 	})
+
+	r.Post("/room", this.createRoom)
+	r.Get("/room/{roomId}", this.getRoomInfo)
+	r.Get("/room/{roomId}/voter/{voterId}", this.getVoterStatus)
+	r.Post("/room/{roomId}/voter/{voterId}", this.handleChangeVoterStatus)
+	r.Router.Methods("GET").Path("/events/{roomId}").HandlerFunc(this.roomEventListenerHandler)
+	m.PathPrefix("/").Handler(http.FileServer(http.Dir(this.UiDir)))
+
+	return m
 }
 
 func runServer(config ServerConfig) {
@@ -238,21 +252,7 @@ func runServer(config ServerConfig) {
 	room.name = "Very Important Meeting"
 	s.rooms["default"] = room
 
-	m := mux.NewRouter()
-	apiRoutes := m.PathPrefix("/api").Subrouter()
-	apiRoutes.Methods("POST").Path("/login").HandlerFunc(api.Wrap(handleLogin))
-	apiRoutes.Methods("GET").Path("/events/{roomId}").HandlerFunc(s.roomEventListenerHandler)
-	apiRoutes.Methods("POST").Path("/room/{roomId}/voter/{voterId}").HandlerFunc(api.Wrap(s.handleChangeVoterStatus))
-	apiRoutes.Methods("GET").Path("/room/{roomId}/voter/{voterId}").HandlerFunc(api.Wrap(s.getVoterStatus))
-	apiRoutes.Methods("GET").Path("/room/{roomId}").HandlerFunc(api.Wrap(s.getRoomInfo))
-	apiRoutes.Methods("POST").Path("/room").HandlerFunc(api.Wrap(s.createRoom))
-	m.PathPrefix("/").Handler(http.FileServer(http.Dir(s.UiDir)))
-	/*	m.Group("/api",func(r martini.Router){
-			r.Post("/login", api.Wrap(handleLogin))
-		})
-		m.Use(martini.Static(s.UiDir, martini.StaticOptions{Prefix: ""}))
-	*/
-	http.Handle("/", m)
+	http.Handle("/", s.router())
 	http.ListenAndServe(":"+s.Port, nil)
 }
 
