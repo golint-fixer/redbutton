@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// provides methods for parsing JSON request, and sending responses
 type HttpHandlerContext struct {
 	req            *http.Request
 	routeVariables map[string]string
@@ -15,26 +16,6 @@ type HttpHandlerContext struct {
 func NewHandler(req *http.Request) *HttpHandlerContext {
 	return &HttpHandlerContext{req: req, status: http.StatusOK}
 }
-
-func Wrap(handler func(c *HttpHandlerContext)) func(resp http.ResponseWriter, req *http.Request) {
-	return func(resp http.ResponseWriter, req *http.Request) {
-		context := NewHandler(req)
-		handler(context)
-
-		result, err := json.MarshalIndent(context.result, "", "  ")
-		if err == nil {
-			resp.Header().Set("Content-Type", "application/json; charset=utf-8")
-			resp.WriteHeader(context.status)
-			resp.Write(result)
-			return
-		}
-
-		// write error handler
-		println("failed to respond properly:", err.Error())
-		http.Error(resp, err.Error(), http.StatusInternalServerError)
-	}
-}
-
 
 func (this *HttpHandlerContext) Status(status int) *HttpHandlerContext{
 	this.status = status
