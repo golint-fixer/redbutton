@@ -49,6 +49,7 @@ func (this *HttpHandlerContext) PathParam(name string) string {
 }
 
 func (this *HttpHandlerContext) Error(status int, message string) {
+	println("error: ",status,message)
 	this.Status(status)
 	this.Result(map[string]string{"message": message})
 }

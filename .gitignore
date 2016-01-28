@@ -5,3 +5,5 @@ redbutton.iml
 server/pkg
 server/src/github.com
 server/src/golang.org
+deploy/aws-credentials
+venv

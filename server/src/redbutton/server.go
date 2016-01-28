@@ -40,13 +40,14 @@ type server struct {
 this handler reports room events into provided websocket connection
 */
 func (this *server) roomEventListenerHandler(resp http.ResponseWriter, req *http.Request) {
+	c := api.NewHandler(req)
 	ws, err := this.websocketUpgrader.Upgrade(resp, req, nil)
 	if err != nil {
+		c.Error(500,"failed to upgrade to websocket connection: "+err.Error())
 		return
 	}
 	defer ws.Close()
 
-	c := api.NewHandler(req)
 	room := this.lookupRoomFromRequest(c)
 	if room == nil {
 		return
