@@ -19,7 +19,6 @@ def goInvocation(*args):
     environment = dict(os.environ)
     environment['GOPATH'] = goWorkspace
     args = [goBinary]+list(args)
-    print args
     result = subprocess.Popen(args, env=environment, cwd=goWorkspace+"/src/redbutton")
     result.communicate()
     return_code = result.returncode
@@ -29,6 +28,3 @@ def goInvocation(*args):
 
 goInvocation("get", "./...")
 goInvocation('build', '-o', serviceBinary, 'redbutton/main')
-
-
-print serviceBinary

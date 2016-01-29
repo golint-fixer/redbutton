@@ -3,7 +3,7 @@
   gather_facts: False
 
   tasks:
-    - name: build package
+    - name: run build
       command: python build/build.py
       environment:
         GOROOT: /home/uiron/apps/go1.5
