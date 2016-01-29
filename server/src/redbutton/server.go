@@ -1,20 +1,18 @@
 package redbutton
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/kelseyhightower/envconfig"
 	"log"
+	"math/rand"
 	"net/http"
 	"path/filepath"
 	"redbutton/api"
-	"strings"
-	"crypto/sha256"
 	"strconv"
-	"math/rand"
+	"strings"
 )
-
-
 
 // generate a random voter ID
 func uniqueId() string {
@@ -24,7 +22,6 @@ func uniqueId() string {
 	return fmt.Sprintf("%x", result)
 }
 
-
 type ServerConfig struct {
 	Port  string `envconfig:"PORT" default:"8081"`
 	UiDir string `envconfig:"UIDIR" default:"."`
@@ -32,7 +29,7 @@ type ServerConfig struct {
 
 type server struct {
 	ServerConfig
-	rooms map[string]*Room
+	rooms             map[string]*Room
 	websocketUpgrader websocket.Upgrader
 }
 
@@ -43,7 +40,7 @@ func (this *server) roomEventListenerHandler(resp http.ResponseWriter, req *http
 	c := api.NewHandler(req)
 	ws, err := this.websocketUpgrader.Upgrade(resp, req, nil)
 	if err != nil {
-		c.Error(500,"failed to upgrade to websocket connection: "+err.Error())
+		c.Error(500, "failed to upgrade to websocket connection: "+err.Error())
 		return
 	}
 	defer ws.Close()
@@ -150,7 +147,6 @@ func (this *server) getVoterStatus(c *api.HttpHandlerContext) {
 	c.Result(&result)
 }
 
-
 func runServer(config ServerConfig) {
 	s := server{ServerConfig: config, rooms: map[string]*Room{}}
 
@@ -160,7 +156,11 @@ func runServer(config ServerConfig) {
 	s.rooms["default"] = room
 
 	http.Handle("/", router(&s))
-	http.ListenAndServe(":"+s.Port, nil)
+	err := http.ListenAndServe(":"+s.Port, nil)
+	if err != nil {
+		panic(err.Error())
+	}
+
 }
 
 func Main() {

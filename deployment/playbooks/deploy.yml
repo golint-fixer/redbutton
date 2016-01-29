@@ -1,12 +1,18 @@
+# deploy server binary, install service control, run start server
+
 - hosts: tag_Name_red_button
   name: upload files
   remote_user: ubuntu
   gather_facts: true
 
   tasks:
+    - name: upload UI files
+      synchronize: src=../ui dest=~/
     - name: upload service binary
       copy: src=../../bin/redbutton-server dest=~/redbutton-server mode="u=rwx,g-rwx,o-rwx"
+    - name: upload init-d template
+      action: template src=templates/redbutton-server.init.d.template dest=/etc/init.d/redbutton-server mode=0751
+      become: true
     - name: start redbutton server
-      command: start-stop-daemon --start --quiet --background --make-pidfile --pidfile /home/ubuntu/redbutton-server.lock --startas /bin/bash -- -c "exec /home/ubuntu/redbutton-server > /home/ubuntu/redbutton-server.log 2>&1"
-      environment:
-        PORT: 80
+      action: service name=redbutton-server state=restarted
+      become: true
