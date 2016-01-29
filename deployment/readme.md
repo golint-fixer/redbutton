@@ -25,7 +25,7 @@ High level instructions for performing deployment to AWS.
   ```
 
 * configure AWS instance SSH with private key access:
-  * create key pair `redbutton` in AWS console (or change name in `deploy.yml`)
+  * create key pair `redbutton` in AWS console (or change name in `provision.yml`)
   * add keypair to ssh:
 
     ```
@@ -33,11 +33,15 @@ High level instructions for performing deployment to AWS.
     $ ssh-add ~/.ssh/redbutton.pem
     ```
 
+* add ELB load balancer (default name `red-button-lb`) - new instances are
+  attached there in `install-application.yml`
+
 ## running deployments
 
 * make sure virtual env is activated
 * change to `deployment` folder (so that Ansible catches it's config)
 * full deployment job running all playbooks in sequence:
+
   ```
   ./deploy.sh
   ```
