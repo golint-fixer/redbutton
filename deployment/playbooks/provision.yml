@@ -11,8 +11,6 @@
          image: ami-365cf745 # ubuntu 14.04 LTS
          wait: true
          count: 1
-         count_tag:
-            Name: red-button
          instance_tags:
             Name: red-button
       register: ec2
