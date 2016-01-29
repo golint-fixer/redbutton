@@ -7,8 +7,8 @@
          key_name: redbutton # ssh key
          region: eu-west-1
          group: default
-         instance_type: t1.micro
-         image: ami-de0fa5ad # ubuntu 14.04 LTS
+         instance_type: t2.micro
+         image: ami-365cf745 # ubuntu 14.04 LTS
          wait: true
          count: 1
          count_tag:
@@ -18,5 +18,5 @@
       register: ec2
 
     - name: Wait for ssh become available
-      wait_for: host={{item.public_ip}} delay=10 port=22 timeout=320 state=started
+      wait_for: host={{item.public_ip}} delay=2 port=22 timeout=320 state=started search_regex=OpenSSH
       with_items: ec2.instances

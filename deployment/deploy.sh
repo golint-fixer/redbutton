@@ -1,3 +1,4 @@
+set -e
 ansible-playbook playbooks/build.yml
 
 inventory/ec2.py --refresh-cache > /dev/null

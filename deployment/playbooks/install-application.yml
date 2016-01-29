@@ -6,6 +6,7 @@
   gather_facts: true
 
   tasks:
+    - wait_for: port=22 search_regex=OpenSSH delay=1
     - name: upload UI files
       synchronize: src=../ui dest=~/
     - name: upload service binary
