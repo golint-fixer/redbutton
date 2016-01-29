@@ -32,5 +32,5 @@ High level instructions for performing deployment to AWS.
 * change to `deployment` folder (so that Ansible catches it's config)
 * full deployment job running all playbooks in sequence:
   ```
-  ansible-playbook playbooks/main.yml
+  ./deploy.sh
   ```

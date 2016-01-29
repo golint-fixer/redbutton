@@ -1,4 +1,0 @@
-- include: build.yml
-- include: decomission.yml
-- include: provision.yml
-- include: deploy.yml
