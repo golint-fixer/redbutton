@@ -12,3 +12,4 @@
         keypair: 'myapp'
         instance_ids: "{{ ansible_ec2_instance_id }}"
 
+

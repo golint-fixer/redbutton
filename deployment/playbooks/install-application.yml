@@ -16,3 +16,11 @@
     - name: start redbutton server
       action: service name=redbutton-server state=restarted
       become: true
+    - name: Register with load balancer
+      local_action:
+        module: ec2_elb
+        instance_id: "{{ ec2_id }}"
+        ec2_elbs: red-button-lb
+        region: eu-west-1
+        state: present
+

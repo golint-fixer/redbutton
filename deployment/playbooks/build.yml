@@ -1,4 +1,5 @@
-- hosts: localhost
+- name: Prepare deployment
+  hosts: localhost
   connection: local
   gather_facts: False
 

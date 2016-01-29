@@ -10,7 +10,7 @@
          instance_type: t1.micro
          image: ami-de0fa5ad # ubuntu 14.04 LTS
          wait: true
-         exact_count: 1
+         count: 1
          count_tag:
             Name: red-button
          instance_tags:
