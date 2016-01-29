@@ -29,15 +29,8 @@ High level instructions for performing deployment to AWS.
 ## running deployments
 
 * make sure virtual env is activated
-* deploy:
-
+* change to `deployment` folder (so that Ansible catches it's config)
+* full deployment job running all playbooks in sequence:
   ```
-  ansible-playbook playbooks/deploy.yml
+  ansible-playbook playbooks/main.yml
   ```
-
-## checking
-Ping launched instances:
-
-```
-ansible -m ping -u ubuntu ec2
-```
