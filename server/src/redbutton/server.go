@@ -29,7 +29,7 @@ type ServerConfig struct {
 
 type server struct {
 	ServerConfig
-	rooms             map[string]*Room
+	rooms             *Rooms
 	websocketUpgrader websocket.Upgrader
 }
 
@@ -40,7 +40,7 @@ func (this *server) roomEventListenerHandler(resp http.ResponseWriter, req *http
 	c := api.NewHandler(req)
 	ws, err := this.websocketUpgrader.Upgrade(resp, req, nil)
 	if err != nil {
-		c.Error(500, "failed to upgrade to websocket connection: "+err.Error())
+		c.Error(500, "failed to upgrade to websocket connection: " + err.Error())
 		return
 	}
 	defer ws.Close()
@@ -71,12 +71,13 @@ func (this *server) lookupRoomFromRequest(c *api.HttpHandlerContext) *Room {
 		return nil
 	}
 
-	if _, ok := this.rooms[roomId]; !ok {
-		c.Error(http.StatusNotFound, "room "+roomId+" was not found")
+	room := this.rooms.findRoom(roomId)
+	if room == nil {
+		c.Error(http.StatusNotFound, "room " + roomId + " was not found")
 		return nil
 	}
 
-	return this.rooms[roomId]
+	return room
 }
 
 // voter ID comes from request
@@ -114,9 +115,7 @@ func (this *server) createRoom(c *api.HttpHandlerContext) {
 		return
 	}
 
-	room := NewRoom()
-	this.rooms[id] = room
-	room.id = id
+	room := this.rooms.newRoom(id)
 	room.owner = info.RoomOwner
 	room.name = info.RoomName
 
@@ -148,15 +147,12 @@ func (this *server) getVoterStatus(c *api.HttpHandlerContext) {
 }
 
 func runServer(config ServerConfig) {
-	s := server{ServerConfig: config, rooms: map[string]*Room{}}
+	s := server{ServerConfig: config, rooms: newRoomsList()}
 
 	s.websocketUpgrader = websocket.Upgrader{}
-	room := NewRoom()
-	room.name = "Very Important Meeting"
-	s.rooms["default"] = room
 
 	http.Handle("/", router(&s))
-	err := http.ListenAndServe(":"+s.Port, nil)
+	err := http.ListenAndServe(":" + s.Port, nil)
 	if err != nil {
 		panic(err.Error())
 	}

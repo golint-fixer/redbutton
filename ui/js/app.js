@@ -52,13 +52,14 @@ angular.module('redButtonApp', [
 
     $scope.roomStatus = null
 
+    // when logged in status is broadcasted, update room status for this voter
     $scope.$on('logged-in', function() {
-        updateVoterStatus()
+        updateVoterRoomStatus()
     });
 
 
     // retrieve room status for this room owner
-    function updateVoterStatus(){
+    function updateVoterRoomStatus(){
         if (!$scope.voterId)
             return
 
@@ -79,7 +80,7 @@ angular.module('redButtonApp', [
         $scope.marks = new Array(roomInfo.marks)
 
         // something changed? maybe our own status on another window?
-        updateVoterStatus()
+        updateVoterRoomStatus()
     }))
 
     function setHappy(happy){
