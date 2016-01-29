@@ -1,7 +1,7 @@
 # deploy server binary, install service control, run start server
 
 - hosts: tag_Name_red_button
-  name: upload files
+  name: install application
   remote_user: ubuntu
   gather_facts: true
 

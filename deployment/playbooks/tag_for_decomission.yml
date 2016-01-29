@@ -1,0 +1,11 @@
+- name: tag for decomision
+  hosts: tag_Name_red_button
+  remote_user: ubuntu
+  tasks:
+    - local_action:
+        module: ec2_tag
+        region: eu-west-1
+        resource: "{{ ec2_id }}"
+        state: present
+        tags:
+          Name: red-button-old

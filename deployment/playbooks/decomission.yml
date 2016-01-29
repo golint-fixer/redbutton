@@ -1,5 +1,5 @@
 - name: terminate old instances
-  hosts: tag_Name_red_button
+  hosts: tag_Name_red_button_old
   remote_user: ubuntu
   tasks:
     - name: gather current ec2 facts
