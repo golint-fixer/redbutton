@@ -1,37 +1,25 @@
 package redbutton
+
 import (
 	"redbutton/api"
-	"github.com/gorilla/websocket"
-	"log"
+	"sync"
 )
 
-// an entity that is interested in room events
-// receives notifications via provided websocket connection
-type RoomListener struct {
-	ws     *websocket.Conn
-	room   *Room
-	events chan api.RoomStatusChangeEvent
-}
+type RoomListenerMessageHandler func(msg interface{}) error
 
-func NewRoomListener(ws *websocket.Conn, room *Room) *RoomListener {
-	return &RoomListener{
-		ws:     ws,
-		room:   room,
-		events: make(chan api.RoomStatusChangeEvent),
-	}
+// an entity that is interested in room events
+// receives notifications via provided message handler
+type RoomListener struct {
+	messageHandler RoomListenerMessageHandler
 }
 
 // notifies this room listener that there's a new event
 func (this *RoomListener) newEvent(message interface{}) {
-	err := websocket.WriteJSON(this.ws, message)
-	if err != nil {
-		log.Println("failed sending json: " + err.Error())
-		this.ws.Close()
-		return
-	}
+	this.messageHandler(message)
 }
 
 type Room struct {
+	sync.RWMutex
 	id           string
 	name         string
 	owner        string
@@ -55,13 +43,19 @@ func roomAsJson(room *Room) *api.RoomInfo {
 	return &info
 }
 
-// TODO: possible race condition, this gets called from new WS connections
-func (this *Room) registerListener(listener *RoomListener) {
+func (this *Room) createListener(handler RoomListenerMessageHandler) *RoomListener {
+	this.Lock()
+	defer this.Unlock()
+
+	listener := &RoomListener{messageHandler: handler}
 	this.listeners[listener] = true
 	this.notifyStatusChanged()
+	return listener
 }
 
 func (this *Room) unregisterListener(listener *RoomListener) {
+	this.Lock()
+	defer this.Unlock()
 	delete(this.listeners, listener)
 	this.notifyStatusChanged()
 }
@@ -77,16 +71,22 @@ func (this *Room) notifyStatusChanged() {
 
 // broadcasts a message to all room listeners
 func (this *Room) broadcastMessage(message interface{}) {
+	this.RLock()
+	defer this.RUnlock()
 	for listener, _ := range this.listeners {
 		go listener.newEvent(message)
 	}
 }
 
 func (this *Room) setHappy(voterId string, happy bool) {
+	this.Lock()
+
 	if happy {
 		delete(this.unhappyVotes, voterId)
 	} else {
 		this.unhappyVotes[voterId] = happy
 	}
+	this.Unlock()
+
 	this.notifyStatusChanged()
 }

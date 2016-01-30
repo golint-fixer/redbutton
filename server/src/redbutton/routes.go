@@ -5,7 +5,7 @@ import (
 	"redbutton/api"
 )
 
-func router(s *server) http.Handler {
+func makeRoutes(s *server) http.Handler {
 	m := mux.NewRouter()
 
 	r := api.NewRouteWrapper(m)

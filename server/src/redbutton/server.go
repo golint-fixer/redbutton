@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/kelseyhightower/envconfig"
-	"log"
 	"math/rand"
 	"net/http"
 	"path/filepath"
 	"redbutton/api"
 	"strconv"
 	"strings"
+	"log"
 )
 
-// generate a random voter ID
+// generate a random ID
 func uniqueId() string {
 	h := sha256.New()
 	result := h.Sum([]byte(strconv.Itoa(rand.Int())))
@@ -50,8 +50,13 @@ func (this *server) roomEventListenerHandler(resp http.ResponseWriter, req *http
 		return
 	}
 
-	listener := NewRoomListener(ws, room)
-	room.registerListener(listener)
+	listener := room.createListener(func(msg interface{}) error {
+		err := websocket.WriteJSON(ws, msg)
+		if err != nil {
+			log.Println("failed sending json: " + err.Error())
+		}
+		return err
+	})
 	defer room.unregisterListener(listener)
 
 	// read data to catch the eof
@@ -64,6 +69,8 @@ func (this *server) roomEventListenerHandler(resp http.ResponseWriter, req *http
 	}
 }
 
+// finds room by ID from 'roomId' url parameter; if not found, sets
+// http handler to appropriate HTTP error and returns null
 func (this *server) lookupRoomFromRequest(c *api.HttpHandlerContext) *Room {
 	roomId := c.PathParam("roomId")
 	if roomId == "" {
@@ -102,9 +109,6 @@ func (this *server) handleChangeVoterStatus(c *api.HttpHandlerContext) {
 }
 
 func (this *server) createRoom(c *api.HttpHandlerContext) {
-	id := uniqueId()
-	log.Println("creating room", id)
-
 	info := api.RoomInfo{}
 	if !c.ParseRequest(&info) {
 		return
@@ -115,7 +119,7 @@ func (this *server) createRoom(c *api.HttpHandlerContext) {
 		return
 	}
 
-	room := this.rooms.newRoom(id)
+	room := this.rooms.newRoom()
 	room.owner = info.RoomOwner
 	room.name = info.RoomName
 
@@ -151,12 +155,11 @@ func runServer(config ServerConfig) {
 
 	s.websocketUpgrader = websocket.Upgrader{}
 
-	http.Handle("/", router(&s))
+	http.Handle("/", makeRoutes(&s))
 	err := http.ListenAndServe(":" + s.Port, nil)
 	if err != nil {
 		panic(err.Error())
 	}
-
 }
 
 func Main() {
