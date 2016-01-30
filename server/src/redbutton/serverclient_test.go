@@ -32,7 +32,7 @@ func (this *ApiClient) remember(response *napping.Response, err error) {
 
 func (this *ApiClient) assertResponse(expectedHttpCode int) {
 	require.NoError(this.t, this.lastError)
-	require.Equal(this.t, expectedHttpCode, this.lastResponse.Status())
+	require.Equal(this.t, expectedHttpCode, this.lastResponse.Status(), this.lastResponse.RawText())
 }
 
 func (this *ApiClient) login() api.LoginResponse {

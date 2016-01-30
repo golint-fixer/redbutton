@@ -1,7 +1,8 @@
 app.controller('roomCtrl', function ($scope, $http, $websocket, $stateParams, $state) {
+    console.log("rebuilding room ctrl")
     var roomId = $stateParams.roomId
 
-    $scope.roomStatus = null
+    $scope.voterStatus = null
 
     // when logged in status is broadcasted, update room status for this voter
     $scope.$on('logged-in', function() {
@@ -17,7 +18,7 @@ app.controller('roomCtrl', function ($scope, $http, $websocket, $stateParams, $s
             return
 
         $http.get("api/room/"+roomId+"/voter/"+$scope.voterId).then(function (res){
-            $scope.roomStatus = {happy:res.data.happy}
+            $scope.voterStatus = {happy:res.data.happy}
             startProcessingRoomEvents()
         },function(err){
             // room not found? redirect to error
@@ -39,7 +40,7 @@ app.controller('roomCtrl', function ($scope, $http, $websocket, $stateParams, $s
         if (processingEvents)
             return
         processingEvents = true
-        var ws = $websocket("ws://"+window.location.host+'/api/events/'+$stateParams.roomId)
+        var ws = $websocket("ws://"+window.location.host+"/api/room/"+roomId+"/voter/"+$scope.voterId+"/events")
         ws.onMessage(jsonHandler(function(roomInfo) {
             $scope.roomInfo = roomInfo
 
@@ -59,22 +60,14 @@ app.controller('roomCtrl', function ($scope, $http, $websocket, $stateParams, $s
         });
     }
 
-    function setHappy(happy){
-        if ($scope.roomStatus.happy==happy)
+    $scope.setHappy = function (happy){
+        if ($scope.voterStatus.happy==happy)
             return;
 
         $http.post("api/room/"+roomId+"/voter/"+$scope.voterId,{happy:happy}).then(function (res){
-            $scope.roomStatus = {happy:res.data.happy}
-            $scope.roomStatus=res.data;
+            $scope.voterStatus = {happy:res.data.happy}
+            $scope.voterStatus=res.data;
         })
-    }
-
-    // button handlers
-    $scope.voteUp = function(){
-        setHappy(true);
-    }
-    $scope.voteDown = function(){
-        setHappy(false);
     }
 
 })

@@ -37,15 +37,15 @@ func (this *RouteWrapper) Delete(path string, handler func(c *HttpHandlerContext
 
 func wrapHandlerToConventional(handler func(c *HttpHandlerContext)) func(resp http.ResponseWriter, req *http.Request) {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		println("[", req.Method, "] " + req.RequestURI)
 		context := NewHandler(req)
 		handler(context)
+
+		defer println("[", req.Method, "] " + req.RequestURI, context.status)
 
 		result, err := json.MarshalIndent(context.result, "", "  ")
 		if err == nil {
 			resp.Header().Set("Content-Type", "application/json; charset=utf-8")
 			resp.WriteHeader(context.status)
-			println("[", req.Method, "] " + req.RequestURI, context.status)
 			resp.Write(result)
 			return
 		}

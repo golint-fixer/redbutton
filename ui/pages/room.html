@@ -1,7 +1,6 @@
 <div ng-if="!roomInfo">loading...</div>
 
 <div ng-if="roomInfo">
-
     <div class="row text-center">
         <div class="col-xs-12">
             <h1>{{roomInfo.name}}</h1>
@@ -23,12 +22,12 @@
     <div class="row">
         <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3">
             <div class="col-sm-6">
-                <a href ng-click="voteUp()" class="btn btn-success btn-lg btn-block btn-vote" ng-class="{disabled: roomStatus.happy}">
+                <a href ng-click="setHappy(true)" class="btn btn-success btn-lg btn-block btn-vote" ng-class="{disabled: voterStatus.happy}">
                     <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span>
                 </a>
             </div>
             <div class="col-sm-6">
-                <a href ng-click="voteDown()" class="btn btn-danger btn-lg btn-block btn-vote" ng-class="{disabled: !roomStatus.happy}">
+                <a href ng-click="setHappy(false)" class="btn btn-danger btn-lg btn-block btn-vote" ng-class="{disabled: !voterStatus.happy}">
                     <span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span>
                 </a>
             </div>

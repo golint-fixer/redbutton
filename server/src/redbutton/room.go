@@ -7,9 +7,12 @@ import (
 
 type RoomListenerMessageHandler func(msg interface{}) error
 
+type VoterId string
+
 // an entity that is interested in room events
 // receives notifications via provided message handler
 type RoomListener struct {
+	voterId        VoterId
 	messageHandler RoomListenerMessageHandler
 }
 
@@ -20,17 +23,17 @@ func (this *RoomListener) newEvent(message interface{}) {
 
 type Room struct {
 	sync.RWMutex
-	id           string
-	name         string
-	owner        string
-	listeners    map[*RoomListener]bool
-	unhappyVotes map[string]bool
+	id        string
+	name      string
+	owner     string
+	listeners map[*RoomListener]bool
+	voters    map[VoterId]bool
 }
 
 func NewRoom() *Room {
 	return &Room{
-		listeners:    map[*RoomListener]bool{},
-		unhappyVotes: map[string]bool{},
+		listeners: map[*RoomListener]bool{},
+		voters:    map[VoterId]bool{},
 	}
 }
 
@@ -43,12 +46,17 @@ func roomAsJson(room *Room) *api.RoomInfo {
 	return &info
 }
 
-func (this *Room) createListener(handler RoomListenerMessageHandler) *RoomListener {
+func (this *Room) createListener(voterId VoterId, handler RoomListenerMessageHandler) *RoomListener {
 
-	listener := &RoomListener{messageHandler: handler}
+	listener := &RoomListener{voterId: voterId, messageHandler: handler}
 
 	this.Lock()
+	// voters are by default happy
+	if _, ok := this.voters[listener.voterId]; !ok {
+		this.voters[voterId] = true
+	}
 	this.listeners[listener] = true
+
 	this.Unlock()
 
 	this.notifyStatusChanged()
@@ -57,6 +65,7 @@ func (this *Room) createListener(handler RoomListenerMessageHandler) *RoomListen
 
 func (this *Room) unregisterListener(listener *RoomListener) {
 	this.Lock()
+	delete(this.voters, listener.voterId)
 	delete(this.listeners, listener)
 	this.Unlock()
 
@@ -66,9 +75,17 @@ func (this *Room) unregisterListener(listener *RoomListener) {
 // builds and sends out a RoomStatusChangeEvent to this room
 func (this *Room) notifyStatusChanged() {
 	this.RLock()
+
+	numUnhappy := 0
+	for _, happy := range this.voters {
+		if !happy {
+			numUnhappy++
+		}
+	}
+
 	msg := api.RoomStatusChangeEvent{
 		RoomName:     this.name,
-		NumFlags:     len(this.unhappyVotes),
+		NumFlags:     numUnhappy,
 		NumListeners: len(this.listeners),
 	}
 	this.RUnlock()
@@ -84,13 +101,10 @@ func (this *Room) broadcastMessage(message interface{}) {
 	}
 }
 
-func (this *Room) setHappy(voterId string, happy bool) {
+func (this *Room) setHappy(voterId VoterId, happy bool) {
 	this.Lock()
-
-	if happy {
-		delete(this.unhappyVotes, voterId)
-	} else {
-		this.unhappyVotes[voterId] = happy
+	if _, ok := this.voters[voterId]; ok {
+		this.voters[voterId] = happy
 	}
 	this.Unlock()
 

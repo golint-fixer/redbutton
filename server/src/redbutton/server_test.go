@@ -92,7 +92,7 @@ func TestListenForRoomEvents(t *testing.T) {
 	c.assertResponse(201)
 
 
-	conn, _, err := websocket.DefaultDialer.Dial(c.wsEndpoint + "/events/" + room.Id, nil)
+	conn, _, err := websocket.DefaultDialer.Dial(c.wsEndpoint + "/room/"+room.Id+"/voter/"+loginResponse.VoterId+"/events", nil)
 	require.NoError(t, err)
 	defer conn.Close()
 
@@ -111,4 +111,24 @@ func TestListenForRoomEvents(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, roomEvent.NumFlags)
 
+}
+
+// test if our ID generation uses all hex characters evenly
+// this test is silly, but whatever
+func TestRandomIds(t *testing.T) {
+	counts := map[rune] int{}
+
+	// gather statistics about larger amount of unique IDs
+	totalCharCount := 0
+	for i:=0;i<100;i++ {
+		for _, c := range(uniqueId()) {
+			counts[c]++
+			totalCharCount ++;
+		}
+	}
+
+	// each char should have been used approximately 1:16 times
+	for _,value := range(counts) {
+		require.InEpsilon(t,1.0/16.0,float32(value)/float32(totalCharCount),0.1)
+	}
 }

@@ -21,7 +21,7 @@ func makeRoutes(s *server) http.Handler {
 	r.Get("/api/room/{roomId}", s.getRoomInfo)
 	r.Get("/api/room/{roomId}/voter/{voterId}", s.getVoterStatus)
 	r.Post("/api/room/{roomId}/voter/{voterId}", s.handleChangeVoterStatus)
-	r.Router.Methods("GET").Path("/api/events/{roomId}").HandlerFunc(s.roomEventListenerHandler)
+	r.Router.Methods("GET").Path("/api/room/{roomId}/voter/{voterId}/events").HandlerFunc(s.roomEventListenerHandler)
 	m.PathPrefix("/").Handler(http.FileServer(http.Dir(s.UiDir)))
 
 	return m

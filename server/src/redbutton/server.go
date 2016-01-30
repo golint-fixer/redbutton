@@ -17,8 +17,12 @@ import (
 // generate a random ID
 func uniqueId() string {
 	h := sha256.New()
-	result := h.Sum([]byte(strconv.Itoa(rand.Int())))
 
+	for i:=1;i<10;i++ {
+		h.Write([]byte(strconv.Itoa(rand.Int())))
+	}
+
+	result := h.Sum([]byte{})
 	return fmt.Sprintf("%x", result)
 }
 
@@ -38,6 +42,19 @@ this handler reports room events into provided websocket connection
 */
 func (this *server) roomEventListenerHandler(resp http.ResponseWriter, req *http.Request) {
 	c := api.NewHandler(req)
+
+	// get voter and room IDs; return on any error
+	voterId := this.getVoterIdFromRequest(c)
+	if voterId == "" {
+		return
+	}
+	room := this.lookupRoomFromRequest(c)
+	if room == nil {
+		return
+	}
+
+
+
 	ws, err := this.websocketUpgrader.Upgrade(resp, req, nil)
 	if err != nil {
 		c.Error(500, "failed to upgrade to websocket connection: " + err.Error())
@@ -45,12 +62,8 @@ func (this *server) roomEventListenerHandler(resp http.ResponseWriter, req *http
 	}
 	defer ws.Close()
 
-	room := this.lookupRoomFromRequest(c)
-	if room == nil {
-		return
-	}
 
-	listener := room.createListener(func(msg interface{}) error {
+	listener := room.createListener(voterId, func(msg interface{}) error {
 		err := websocket.WriteJSON(ws, msg)
 		if err != nil {
 			log.Println("failed sending json: " + err.Error())
@@ -87,11 +100,41 @@ func (this *server) lookupRoomFromRequest(c *api.HttpHandlerContext) *Room {
 	return room
 }
 
-// voter ID comes from request
-func (this *server) handleChangeVoterStatus(c *api.HttpHandlerContext) {
+func (this *server) getVoterIdFromRequest(c *api.HttpHandlerContext) VoterId {
 	voterId := c.PathParam("voterId")
 	if voterId == "" {
 		c.Error(http.StatusBadRequest, "voter ID missing")
+		return ""
+	}
+	return VoterId(voterId)
+}
+
+
+func (this *server) getVoterStatus(c *api.HttpHandlerContext) {
+	room := this.lookupRoomFromRequest(c)
+	if room == nil {
+		return
+	}
+
+	result := api.VoterStatus{}
+	result.Happy = true
+	voterId := this.getVoterIdFromRequest(c)
+	if voterId=="" {
+		return
+	}
+
+	if value, ok := room.voters[voterId]; ok {
+		result.Happy = value
+	} else {
+		result.Happy = true
+	}
+	c.Result(&result)
+}
+
+// voter ID comes from request
+func (this *server) handleChangeVoterStatus(c *api.HttpHandlerContext) {
+	voterId := this.getVoterIdFromRequest(c)
+	if voterId == "" {
 		return
 	}
 	room := this.lookupRoomFromRequest(c)
@@ -135,20 +178,7 @@ func (this *server) getRoomInfo(c *api.HttpHandlerContext) {
 	c.Result(roomAsJson(room))
 }
 
-func (this *server) getVoterStatus(c *api.HttpHandlerContext) {
-	room := this.lookupRoomFromRequest(c)
-	if room == nil {
-		return
-	}
 
-	result := api.VoterStatus{}
-	result.Happy = true
-	voterId := c.PathParam("voterId")
-	if _, ok := room.unhappyVotes[voterId]; ok {
-		result.Happy = false
-	}
-	c.Result(&result)
-}
 
 func runServer(config ServerConfig) {
 	s := server{ServerConfig: config, rooms: newRoomsList()}
