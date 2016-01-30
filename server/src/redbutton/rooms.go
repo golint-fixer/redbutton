@@ -1,6 +1,8 @@
 package redbutton
 
-import "sync"
+import (
+	"sync"
+)
 
 type Rooms struct {
 	sync.RWMutex
@@ -22,11 +24,11 @@ func (this *Rooms) findRoom(id string) *Room {
 }
 
 func (this *Rooms) newRoom() *Room {
-	this.Lock()
+	this.RWMutex.Lock()
 	defer this.Unlock()
 
 	for {
-		id := uniqueId()[:12]
+		id := uniqueId()[:16]
 
 		if _, ok := this.rooms[id]; ok {
 			continue
