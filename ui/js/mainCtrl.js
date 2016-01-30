@@ -19,4 +19,9 @@ app.controller('mainCtrl', function ($scope, $http, $cookies) {
         })
     }
 
+    // a shortcut method for child scopes to update page title
+    $scope.setTitle = function(title){
+        $scope.title = title
+    }
+
 })

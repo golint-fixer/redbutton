@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"redbutton/api"
 	"testing"
+	"github.com/gorilla/websocket"
 )
 
 type ApiClient struct {
@@ -42,10 +43,10 @@ func (this *ApiClient) login() api.LoginResponse {
 	return result
 }
 
-func (this *ApiClient) getVoterStatus(roomId string, voterId string) api.VoterStatus {
+func (this *ApiClient) getVoterStatus(roomId string, voterId string, expectedCode int) api.VoterStatus {
 	s := api.VoterStatus{}
 	this.remember(napping.Get(this.serviceEndpoint + "/room/" + roomId + "/voter/" + voterId, nil, &s, nil))
-	this.assertResponse(200)
+	this.assertResponse(expectedCode)
 	return s
 }
 
@@ -67,4 +68,10 @@ func (this *ApiClient) getRoomInfo(roomId string) api.RoomInfo {
 	this.remember(napping.Get(this.serviceEndpoint + "/room/" + roomId, nil, &result, nil))
 	this.assertResponse(200)
 	return result
+}
+
+func (this *ApiClient) listenForEvents(roomId string, voterId string)  *websocket.Conn {
+	conn, _, err := websocket.DefaultDialer.Dial(this.wsEndpoint + "/room/"+roomId+"/voter/"+voterId+"/events", nil)
+	require.NoError(this.t, err)
+	return conn
 }

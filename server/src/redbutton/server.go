@@ -126,7 +126,8 @@ func (this *server) getVoterStatus(c *api.HttpHandlerContext) {
 	if value, ok := room.voters[voterId]; ok {
 		result.Happy = value
 	} else {
-		result.Happy = true
+		c.Error(http.StatusBadRequest,"Voter is not participating in this room")
+		return
 	}
 	c.Result(&result)
 }

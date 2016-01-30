@@ -6,7 +6,6 @@ import (
 	"github.com/jmcvetta/napping"
 	"redbutton/api"
 	"net/http"
-	"github.com/gorilla/websocket"
 )
 
 var testServerConfig = ServerConfig{
@@ -47,10 +46,17 @@ func TestGetVoterStatus(t *testing.T) {
 	loginResponse := c.login()
 	room := c.createNewRoom(api.RoomInfo{RoomName:"another room", RoomOwner:loginResponse.VoterId})
 
+	{
+		// voters that are not participating in the room should be rejected for status polls
+		c.getVoterStatus(room.Id, loginResponse.VoterId, http.StatusBadRequest)
+	}
+
+	conn := c.listenForEvents(room.Id,loginResponse.VoterId)
+	defer conn.Close()
 
 	{
 		// get voter status: happy by default
-		s := c.getVoterStatus(room.Id, loginResponse.VoterId)
+		s := c.getVoterStatus(room.Id, loginResponse.VoterId, http.StatusOK)
 		require.True(t, s.Happy)
 	}
 
@@ -62,7 +68,7 @@ func TestGetVoterStatus(t *testing.T) {
 
 	{
 		// should be unhappy now
-		s := c.getVoterStatus(room.Id, loginResponse.VoterId)
+		s := c.getVoterStatus(room.Id, loginResponse.VoterId, http.StatusOK)
 		require.False(t, s.Happy)
 	}
 
@@ -92,14 +98,13 @@ func TestListenForRoomEvents(t *testing.T) {
 	c.assertResponse(201)
 
 
-	conn, _, err := websocket.DefaultDialer.Dial(c.wsEndpoint + "/room/"+room.Id+"/voter/"+loginResponse.VoterId+"/events", nil)
-	require.NoError(t, err)
+	conn := c.listenForEvents(room.Id,loginResponse.VoterId)
 	defer conn.Close()
 
 	roomEvent := api.RoomStatusChangeEvent{}
 
 	// room event should be received after initiation of the connection
-	err = conn.ReadJSON(&roomEvent)
+	err := conn.ReadJSON(&roomEvent)
 	require.NoError(t, err)
 	require.Equal(t, room.RoomName, roomEvent.RoomName)
 	require.Equal(t, 0, roomEvent.NumFlags)

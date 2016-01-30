@@ -2,14 +2,20 @@ app.controller('roomCtrl', function ($scope, $http, $websocket, $stateParams, $s
     console.log("rebuilding room ctrl")
     var roomId = $stateParams.roomId
 
-    $scope.voterStatus = null
+    $scope.roomInfo = null // updated after even from websocket
+    $scope.voterStatus = null // updated after updateVoterRoomStatus() call
 
-    // when logged in status is broadcasted, update room status for this voter
-    $scope.$on('logged-in', function() {
-        updateVoterRoomStatus()
-    });
-    // attempt to update voter status right away, if voterId is available
-    updateVoterRoomStatus()
+
+    $http.get("api/room/"+roomId).then(
+    function (res){
+        // room exists? start listening for room events
+        console.log("processing room events!")
+        startProcessingRoomEvents()
+    },
+    function (err){
+        // no such room; fallback to index
+        $state.go("index")
+    })
 
 
     // retrieve room status for this room owner
@@ -19,10 +25,6 @@ app.controller('roomCtrl', function ($scope, $http, $websocket, $stateParams, $s
 
         $http.get("api/room/"+roomId+"/voter/"+$scope.voterId).then(function (res){
             $scope.voterStatus = {happy:res.data.happy}
-            startProcessingRoomEvents()
-        },function(err){
-            // room not found? redirect to error
-            $state.go("index")
         })
     }
 
@@ -35,18 +37,22 @@ app.controller('roomCtrl', function ($scope, $http, $websocket, $stateParams, $s
         }
     }
 
-    var processingEvents = false
     function startProcessingRoomEvents() {
-        if (processingEvents)
-            return
         processingEvents = true
         var ws = $websocket("ws://"+window.location.host+"/api/room/"+roomId+"/voter/"+$scope.voterId+"/events")
+
+        // when controller is closed, close this websocket as well
+        $scope.$on("$destroy", function() {
+            ws.close()
+        });
+
+        // on message from json handler, update roomInfo with relevant data
         ws.onMessage(jsonHandler(function(roomInfo) {
             $scope.roomInfo = roomInfo
 
-            $scope.title = roomInfo.name
+            $scope.setTitle(roomInfo.name)
             if (roomInfo.marks>0){
-                $scope.title = '('+roomInfo.marks+') '+$scope.title
+                $scope.setTitle('('+roomInfo.marks+') '+$scope.title)
             }
 
             $scope.marks = new Array(roomInfo.marks)
@@ -54,10 +60,7 @@ app.controller('roomCtrl', function ($scope, $http, $websocket, $stateParams, $s
             // something changed? maybe our own status on another window?
             updateVoterRoomStatus()
         }))
-        $scope.$on("$destroy", function() {
-            console.log("closing listener for room",$stateParams.roomId)
-            ws.close()
-        });
+
     }
 
     $scope.setHappy = function (happy){
