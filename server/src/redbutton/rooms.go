@@ -25,15 +25,17 @@ func (this *Rooms) newRoom() *Room {
 	this.Lock()
 	defer this.Unlock()
 
-	regenId:
-	id := uniqueId()[:12]
+	for {
+		id := uniqueId()[:12]
 
-	if _, ok := this.rooms[id]; ok {
-		goto regenId
+		if _, ok := this.rooms[id]; ok {
+			continue
+		}
+
+		room := NewRoom()
+		this.rooms[id] = room
+		room.id = id
+		return room
 	}
 
-	room := NewRoom()
-	this.rooms[id] = room
-	room.id = id
-	return room
 }
