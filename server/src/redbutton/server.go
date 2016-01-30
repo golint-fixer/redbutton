@@ -116,20 +116,13 @@ func (this *server) getVoterStatus(c *api.HttpHandlerContext) {
 		return
 	}
 
-	result := api.VoterStatus{}
-	result.Happy = true
 	voterId := this.getVoterIdFromRequest(c)
 	if voterId=="" {
 		return
 	}
 
-	if value, ok := room.voters[voterId]; ok {
-		result.Happy = value
-	} else {
-		c.Error(http.StatusBadRequest,"Voter is not participating in this room")
-		return
-	}
-	c.Result(&result)
+
+	c.Result(room.getVoterStatus(voterId))
 }
 
 // voter ID comes from request

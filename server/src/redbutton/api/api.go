@@ -1,6 +1,5 @@
 package api
 
-
 type (
 	VoterStatus struct {
 		Happy bool `json:"happy"`
@@ -11,9 +10,9 @@ type (
 	}
 
 	RoomStatusChangeEvent struct {
-		RoomName     string `json:"name"`
-		NumFlags     int    `json:"marks"`
-		NumListeners int    `json:"listeners"`
+		RoomName        string `json:"name"`
+		NumFlags        int    `json:"marks"`
+		NumParticipants int    `json:"participants"`
 	}
 
 	RoomInfo struct {
@@ -22,5 +21,3 @@ type (
 		RoomOwner string `json:"owner"`
 	}
 )
-
-
