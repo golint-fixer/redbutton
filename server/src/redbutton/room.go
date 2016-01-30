@@ -25,7 +25,7 @@ type Room struct {
 	sync.RWMutex
 	id        string
 	name      string
-	owner     string
+	owner     VoterId
 	listeners map[*RoomListener]bool
 	voters    map[VoterId]bool
 }
@@ -35,15 +35,6 @@ func NewRoom() *Room {
 		listeners: map[*RoomListener]bool{},
 		voters:    map[VoterId]bool{},
 	}
-}
-
-// TODO: http layer ideally should not be in this file at all
-func roomAsJson(room *Room) *api.RoomInfo {
-	info := api.RoomInfo{}
-	info.Id = room.id
-	info.RoomName = room.name
-	info.RoomOwner = room.owner
-	return &info
 }
 
 func (this *Room) ensureVoterPresent(voterId VoterId) {
@@ -74,10 +65,8 @@ func (this *Room) unregisterListener(listener *RoomListener) {
 	this.notifyStatusChanged()
 }
 
-// builds and sends out a RoomStatusChangeEvent to this room
-func (this *Room) notifyStatusChanged() {
-	this.RLock()
-
+// TODO: http layer ideally should not be in this file at all
+func (this *Room) asJson() *api.RoomInfo {
 	// collect IDs of active voters
 	activeVoters := map[VoterId]bool{}
 	for listener, _ := range this.listeners {
@@ -94,11 +83,19 @@ func (this *Room) notifyStatusChanged() {
 		}
 	}
 
-	msg := api.RoomStatusChangeEvent{
+	return &api.RoomInfo{
+		Id:              this.id,
 		RoomName:        this.name,
 		NumFlags:        numUnhappy,
 		NumParticipants: len(activeVoters),
+		RoomOwner:       string(this.owner),
 	}
+}
+
+// builds and sends out a RoomStatusChangeEvent to this room
+func (this *Room) notifyStatusChanged() {
+	this.RLock()
+	msg := this.asJson()
 	this.RUnlock()
 	this.broadcastMessage(msg)
 }

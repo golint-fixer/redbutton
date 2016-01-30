@@ -34,7 +34,7 @@ func TestInvalidRoomId(t *testing.T) {
 }
 
 func TestLowercaseApi(t *testing.T) {
-	result := map[string]string{}
+	result := map[string]interface{}{}
 	c := newApiClient(t)
 	resp, err := napping.Post(c.serviceEndpoint+"/room", map[string]string{"name": "whatever"}, &result, nil)
 	require.NoError(t, err)
@@ -93,7 +93,7 @@ func TestListenForRoomEvents(t *testing.T) {
 	conn := c.listenForEvents(room.Id, loginResponse.VoterId)
 	defer conn.Close()
 
-	roomEvent := api.RoomStatusChangeEvent{}
+	roomEvent := api.RoomInfo{}
 
 	// room event should be received after initiation of the connection
 	err := conn.ReadJSON(&roomEvent)

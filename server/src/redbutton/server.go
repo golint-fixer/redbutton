@@ -157,10 +157,10 @@ func (this *server) createRoom(c *api.HttpHandlerContext) {
 	}
 
 	room := this.rooms.newRoom()
-	room.owner = info.RoomOwner
+	room.owner = VoterId(info.RoomOwner)
 	room.name = info.RoomName
 
-	c.Status(http.StatusCreated).Result(roomAsJson(room))
+	c.Status(http.StatusCreated).Result(room.asJson())
 }
 
 func (this *server) getRoomInfo(c *api.HttpHandlerContext) {
@@ -169,7 +169,7 @@ func (this *server) getRoomInfo(c *api.HttpHandlerContext) {
 		return
 	}
 
-	c.Result(roomAsJson(room))
+	c.Result(room.asJson())
 }
 
 
