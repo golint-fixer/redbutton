@@ -44,29 +44,35 @@ func roomAsJson(room *Room) *api.RoomInfo {
 }
 
 func (this *Room) createListener(handler RoomListenerMessageHandler) *RoomListener {
-	this.Lock()
-	defer this.Unlock()
 
 	listener := &RoomListener{messageHandler: handler}
+
+	this.Lock()
 	this.listeners[listener] = true
+	this.Unlock()
+
 	this.notifyStatusChanged()
 	return listener
 }
 
 func (this *Room) unregisterListener(listener *RoomListener) {
 	this.Lock()
-	defer this.Unlock()
 	delete(this.listeners, listener)
+	this.Unlock()
+
 	this.notifyStatusChanged()
 }
 
 // builds and sends out a RoomStatusChangeEvent to this room
 func (this *Room) notifyStatusChanged() {
-	this.broadcastMessage(api.RoomStatusChangeEvent{
+	this.RLock()
+	msg := api.RoomStatusChangeEvent{
 		RoomName:     this.name,
 		NumFlags:     len(this.unhappyVotes),
 		NumListeners: len(this.listeners),
-	})
+	}
+	this.RUnlock()
+	this.broadcastMessage(msg)
 }
 
 // broadcasts a message to all room listeners

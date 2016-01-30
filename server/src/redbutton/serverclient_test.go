@@ -3,13 +3,14 @@ package redbutton
 import (
 	"github.com/jmcvetta/napping"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"redbutton/api"
 	"net/http"
+	"redbutton/api"
+	"testing"
 )
 
 type ApiClient struct {
 	serviceEndpoint string
+	wsEndpoint      string
 	t               *testing.T
 	lastResponse    *napping.Response
 	lastError       error
@@ -17,11 +18,11 @@ type ApiClient struct {
 
 func newApiClient(t *testing.T) *ApiClient {
 	return &ApiClient{
-		t:t,
+		t:               t,
 		serviceEndpoint: "http://0.0.0.0:" + testServerConfig.Port + "/api",
+		wsEndpoint: "ws://0.0.0.0:" + testServerConfig.Port + "/api",
 	}
 }
-
 
 // remember request status
 func (this *ApiClient) remember(response *napping.Response, err error) {
@@ -67,5 +68,3 @@ func (this *ApiClient) getRoomInfo(roomId string) api.RoomInfo {
 	this.assertResponse(200)
 	return result
 }
-
-

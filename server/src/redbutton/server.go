@@ -167,7 +167,7 @@ func Main() {
 	envconfig.Process("redbutton", &config)
 	config.UiDir, _ = filepath.Abs(config.UiDir)
 
-	fmt.Printf("config: port %s, ui: %s", config.Port, config.UiDir)
+	fmt.Printf("config: port %s, ui: %s\n", config.Port, config.UiDir)
 
 	runServer(config)
 }

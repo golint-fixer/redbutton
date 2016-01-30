@@ -6,6 +6,7 @@ import (
 	"github.com/jmcvetta/napping"
 	"redbutton/api"
 	"net/http"
+	"github.com/gorilla/websocket"
 )
 
 var testServerConfig = ServerConfig{
@@ -82,5 +83,32 @@ func TestNewRoom(t *testing.T) {
 
 	_ = c.createNewRoom(api.RoomInfo{RoomName:"", RoomOwner:loginResponse.VoterId})
 	c.assertResponse(http.StatusBadRequest)
+}
+
+func TestListenForRoomEvents(t *testing.T) {
+	c := newApiClient(t)
+	loginResponse := c.login()
+	room := c.createNewRoom(api.RoomInfo{RoomName:"another room", RoomOwner:loginResponse.VoterId})
+	c.assertResponse(201)
+
+
+	conn, _, err := websocket.DefaultDialer.Dial(c.wsEndpoint + "/events/" + room.Id, nil)
+	require.NoError(t, err)
+	defer conn.Close()
+
+	roomEvent := api.RoomStatusChangeEvent{}
+
+	// room event should be received after initiation of the connection
+	err = conn.ReadJSON(&roomEvent)
+	require.NoError(t, err)
+	require.Equal(t, room.RoomName, roomEvent.RoomName)
+	require.Equal(t, 0, roomEvent.NumFlags)
+	require.Equal(t, 1, roomEvent.NumListeners)
+
+	// another room even when someone votes in the room
+	c.updateVoterStatus(room.Id, loginResponse.VoterId, api.VoterStatus{Happy:false})
+	err = conn.ReadJSON(&roomEvent)
+	require.NoError(t, err)
+	require.Equal(t, 1, roomEvent.NumFlags)
 
 }

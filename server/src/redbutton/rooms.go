@@ -27,11 +27,12 @@ func (this *Rooms) newRoom() *Room {
 
 	regenId:
 	id := uniqueId()[:12]
-	room := NewRoom()
 
-	if _,ok := this.rooms[id]; ok {
+	if _, ok := this.rooms[id]; ok {
 		goto regenId
 	}
+
+	room := NewRoom()
 	this.rooms[id] = room
 	room.id = id
 	return room
