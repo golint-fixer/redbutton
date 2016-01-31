@@ -90,7 +90,7 @@ func (s *server) lookupRoomFromRequest(c *api.HTTPHandlerContext) *Room {
 
 	room := s.rooms.findRoom(roomID)
 	if room == nil {
-		c.Error(http.StatusNotFound, "room "+ roomID +" was not found")
+		c.Error(http.StatusNotFound, "room "+roomID+" was not found")
 		return nil
 	}
 

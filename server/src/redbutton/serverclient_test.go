@@ -53,14 +53,14 @@ func (c *APIClient) setCurrentUser(voterID string) {
 
 func (c *APIClient) getVoterStatus(roomID string, voterID string, expectedCode int) api.VoterStatus {
 	s := api.VoterStatus{}
-	c.remember(c.session.Get(c.serviceEndpoint+"/room/"+ roomID +"/voter/"+ voterID, nil, &s, nil))
+	c.remember(c.session.Get(c.serviceEndpoint+"/room/"+roomID+"/voter/"+voterID, nil, &s, nil))
 	c.assertResponse(expectedCode)
 	return s
 }
 
 func (c *APIClient) updateVoterStatus(roomID string, voterID string, update api.VoterStatus) api.VoterStatus {
 	result := api.VoterStatus{}
-	c.remember(c.session.Post(c.serviceEndpoint+"/room/"+ roomID +"/voter/"+ voterID, &update, &result, nil))
+	c.remember(c.session.Post(c.serviceEndpoint+"/room/"+roomID+"/voter/"+voterID, &update, &result, nil))
 	c.assertResponse(200)
 	return result
 }
@@ -73,19 +73,19 @@ func (c *APIClient) createNewRoom(info api.RoomInfo) api.RoomInfo {
 
 func (c *APIClient) getRoomInfo(roomID string) api.RoomInfo {
 	result := api.RoomInfo{}
-	c.remember(c.session.Get(c.serviceEndpoint+"/room/"+ roomID, nil, &result, nil))
+	c.remember(c.session.Get(c.serviceEndpoint+"/room/"+roomID, nil, &result, nil))
 	c.assertResponse(200)
 	return result
 }
 
 func (c *APIClient) updateRoomInfo(roomID string, update api.RoomInfo) api.RoomInfo {
 	result := api.RoomInfo{}
-	c.remember(c.session.Post(c.serviceEndpoint+"/room/"+ roomID, &update, &result, nil))
+	c.remember(c.session.Post(c.serviceEndpoint+"/room/"+roomID, &update, &result, nil))
 	return result
 }
 
 func (c *APIClient) listenForEvents(roomID string, voterID string) *websocket.Conn {
-	conn, _, err := websocket.DefaultDialer.Dial(c.wsEndpoint+"/room/"+ roomID +"/voter/"+ voterID +"/events", nil)
+	conn, _, err := websocket.DefaultDialer.Dial(c.wsEndpoint+"/room/"+roomID+"/voter/"+voterID+"/events", nil)
 	require.NoError(c.t, err)
 	return conn
 }
