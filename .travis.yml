@@ -4,7 +4,7 @@ go:
   - 1.5
 
 before_install:
-  - export GOPATH=`pwd`/server/src
+  - export GOPATH=`pwd`/server
   - cd server/src/redbutton
 install:
   - go get -d -v ./... && go build -v ./...
