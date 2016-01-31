@@ -1,8 +1,9 @@
 package api
+
 import (
-	"net/http"
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"net/http"
 )
 
 // provides methods for parsing JSON request, and sending responses
@@ -31,7 +32,7 @@ func (this *HttpHandlerContext) ParseRequest(r interface{}) bool {
 	decoder := json.NewDecoder(this.Req.Body)
 	err := decoder.Decode(r)
 	if err != nil {
-		this.Error(http.StatusBadRequest, "could not parse request: " + err.Error())
+		this.Error(http.StatusBadRequest, "could not parse request: "+err.Error())
 		return false
 	}
 	return true

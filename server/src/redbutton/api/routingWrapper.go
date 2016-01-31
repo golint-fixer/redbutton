@@ -1,8 +1,9 @@
 package api
+
 import (
+	"encoding/json"
 	"github.com/gorilla/mux"
 	"net/http"
-	"encoding/json"
 )
 
 // Little helper to reduce some boilerplate when defining routes and their handlers
@@ -11,7 +12,7 @@ type RouteWrapper struct {
 }
 
 func NewRouteWrapper(router *mux.Router) *RouteWrapper {
-	return &RouteWrapper{Router:router}
+	return &RouteWrapper{Router: router}
 }
 
 func (this *RouteWrapper) Route(method string, path string, handler func(c *HttpHandlerContext)) {
@@ -34,18 +35,16 @@ func (this *RouteWrapper) Delete(path string, handler func(c *HttpHandlerContext
 	this.Route("DELETE", path, handler)
 }
 
-
 func wrapHandlerToConventional(handler func(c *HttpHandlerContext)) func(resp http.ResponseWriter, req *http.Request) {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		context := NewHandler(req)
-		defer println("[", req.Method, "] " + req.RequestURI, context.status)
+		defer println("[", req.Method, "] "+req.RequestURI, context.status)
 
 		handler(context)
 
-		if context.result==nil {
-			context.Error(http.StatusInternalServerError,"response was not created")
+		if context.result == nil {
+			context.Error(http.StatusInternalServerError, "response was not created")
 		}
-
 
 		result, err := json.MarshalIndent(context.result, "", "  ")
 		if err == nil {

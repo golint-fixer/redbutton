@@ -1,7 +1,8 @@
 package redbutton
+
 import (
-	"net/http"
 	"github.com/gorilla/mux"
+	"net/http"
 	"redbutton/api"
 )
 

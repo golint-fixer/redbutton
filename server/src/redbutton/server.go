@@ -5,20 +5,20 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/kelseyhightower/envconfig"
+	"log"
 	"math/rand"
 	"net/http"
 	"path/filepath"
 	"redbutton/api"
 	"strconv"
 	"strings"
-	"log"
 )
 
 // generate a random ID
 func uniqueId() string {
 	h := sha256.New()
 
-	for i:=1;i<10;i++ {
+	for i := 1; i < 10; i++ {
 		h.Write([]byte(strconv.Itoa(rand.Int())))
 	}
 
@@ -53,15 +53,12 @@ func (this *server) roomEventListenerHandler(resp http.ResponseWriter, req *http
 		return
 	}
 
-
-
 	ws, err := this.websocketUpgrader.Upgrade(resp, req, nil)
 	if err != nil {
-		c.Error(500, "failed to upgrade to websocket connection: " + err.Error())
+		c.Error(500, "failed to upgrade to websocket connection: "+err.Error())
 		return
 	}
 	defer ws.Close()
-
 
 	listener := room.createListener(voterId, func(msg interface{}) error {
 		err := websocket.WriteJSON(ws, msg)
@@ -93,7 +90,7 @@ func (this *server) lookupRoomFromRequest(c *api.HttpHandlerContext) *Room {
 
 	room := this.rooms.findRoom(roomId)
 	if room == nil {
-		c.Error(http.StatusNotFound, "room " + roomId + " was not found")
+		c.Error(http.StatusNotFound, "room "+roomId+" was not found")
 		return nil
 	}
 
@@ -103,20 +100,19 @@ func (this *server) lookupRoomFromRequest(c *api.HttpHandlerContext) *Room {
 func (this *server) getVoterIdFromRequest(c *api.HttpHandlerContext) VoterId {
 	// try path param
 	voterId := c.PathParam("voterId")
-	if voterId!="" {
+	if voterId != "" {
 		return VoterId(voterId)
 	}
 
 	// try header
 	voterId = c.Req.Header.Get("voter-id")
-	if voterId!="" {
+	if voterId != "" {
 		return VoterId(voterId)
 	}
 
 	c.Error(http.StatusBadRequest, "voter ID missing")
 	return ""
 }
-
 
 func (this *server) getVoterStatus(c *api.HttpHandlerContext) {
 	room := this.lookupRoomFromRequest(c)
@@ -125,10 +121,9 @@ func (this *server) getVoterStatus(c *api.HttpHandlerContext) {
 	}
 
 	voterId := this.getVoterIdFromRequest(c)
-	if voterId=="" {
+	if voterId == "" {
 		return
 	}
-
 
 	c.Result(room.getVoterStatus(voterId))
 }
@@ -159,10 +154,9 @@ func (this *server) createRoom(c *api.HttpHandlerContext) {
 		return
 	}
 	voterId := this.getVoterIdFromRequest(c)
-	if voterId=="" {
+	if voterId == "" {
 		return
 	}
-
 
 	info.RoomName = strings.TrimSpace(info.RoomName)
 	if info.RoomName == "" {
@@ -202,17 +196,15 @@ func (this *server) updateRoomInfo(c *api.HttpHandlerContext) {
 		return
 	}
 
-	if (update.NumFlags==0) {
+	if update.NumFlags == 0 {
 		// request to reset flags to zero
-		if currentUser!=room.owner {
-			c.Error(http.StatusForbidden,"operation allowed for room owners only")
+		if currentUser != room.owner {
+			c.Error(http.StatusForbidden, "operation allowed for room owners only")
 			return
 		}
 
-
 		room.setAllToHappy()
 	}
-
 
 	c.Result(room.calcRoomInfo())
 }
@@ -223,7 +215,7 @@ func runServer(config ServerConfig) {
 	s.websocketUpgrader = websocket.Upgrader{}
 
 	http.Handle("/", makeRoutes(&s))
-	err := http.ListenAndServe(":" + s.Port, nil)
+	err := http.ListenAndServe(":"+s.Port, nil)
 	if err != nil {
 		panic(err.Error())
 	}

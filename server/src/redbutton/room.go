@@ -5,6 +5,7 @@ import (
 	"sync"
 )
 
+// RoomListenerMessageHandler - a type
 type RoomListenerMessageHandler func(msg interface{}) error
 
 type VoterId string
@@ -66,7 +67,6 @@ func (this *Room) calcRoomInfo() *api.RoomInfo {
 		activeVoters[listener.voterId] = true
 	}
 
-
 	// count votes of active unhappy voters
 	numUnhappy := 0
 	for voterId, happy := range this.voters {
@@ -76,8 +76,6 @@ func (this *Room) calcRoomInfo() *api.RoomInfo {
 			}
 		}
 	}
-
-
 
 	return &api.RoomInfo{
 		Id:              this.id,
@@ -110,9 +108,9 @@ func (this *Room) setHappy(voterId VoterId, happy bool) {
 	this.notifyStatusChanged()
 }
 
-func (this *Room) setAllToHappy(){
+func (this *Room) setAllToHappy() {
 	this.Lock()
-	for key,_ := range this.voters {
+	for key, _ := range this.voters {
 		this.voters[key] = true
 	}
 	this.Unlock()
@@ -123,9 +121,9 @@ func (this *Room) setAllToHappy(){
 func (this *Room) getVoterStatus(voterId VoterId) *api.VoterStatus {
 	result := api.VoterStatus{}
 	result.Happy = true
-	if happy,ok := this.voters[voterId]; ok {
+	if happy, ok := this.voters[voterId]; ok {
 		result.Happy = happy
 	}
-	result.IsOwner = voterId==this.owner
+	result.IsOwner = voterId == this.owner
 	return &result
 }

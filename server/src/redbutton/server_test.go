@@ -131,10 +131,10 @@ func TestIsOwner(t *testing.T) {
 	c.setCurrentUser(owner.VoterId)
 	room := c.createNewRoom(api.RoomInfo{RoomName: "room X"})
 
-	status := c.getVoterStatus(room.Id,owner.VoterId,http.StatusOK)
-	require.True(t,status.IsOwner)
-	status = c.getVoterStatus(room.Id,u1.VoterId,http.StatusOK)
-	require.False(t,status.IsOwner)
+	status := c.getVoterStatus(room.Id, owner.VoterId, http.StatusOK)
+	require.True(t, status.IsOwner)
+	status = c.getVoterStatus(room.Id, u1.VoterId, http.StatusOK)
+	require.False(t, status.IsOwner)
 }
 
 func TestResetVotes(t *testing.T) {
@@ -148,36 +148,33 @@ func TestResetVotes(t *testing.T) {
 	c.assertResponse(201)
 
 	// all participants have to listen for events so that their vote counts to room status
-	c.listenForEvents(room.Id,u1.VoterId)
-	c.listenForEvents(room.Id,u2.VoterId)
-	c.listenForEvents(room.Id,u2.VoterId)
+	c.listenForEvents(room.Id, u1.VoterId)
+	c.listenForEvents(room.Id, u2.VoterId)
+	c.listenForEvents(room.Id, u2.VoterId)
 
-
-	c.updateVoterStatus(room.Id,u1.VoterId,api.VoterStatus{Happy: false})
-	c.updateVoterStatus(room.Id,u2.VoterId,api.VoterStatus{Happy: false})
-	c.updateVoterStatus(room.Id,u3.VoterId,api.VoterStatus{Happy: true})
+	c.updateVoterStatus(room.Id, u1.VoterId, api.VoterStatus{Happy: false})
+	c.updateVoterStatus(room.Id, u2.VoterId, api.VoterStatus{Happy: false})
+	c.updateVoterStatus(room.Id, u3.VoterId, api.VoterStatus{Happy: true})
 
 	info := c.getRoomInfo(room.Id)
-	require.Equal(t,2,info.NumFlags)
+	require.Equal(t, 2, info.NumFlags)
 
 	// reset our client so we don't have current user set at all
 	c = newApiClient(t)
 
 	// this request requires current user header, and it has to be a room owner
-	info = c.updateRoomInfo(room.Id, api.RoomInfo{NumFlags:0})
+	info = c.updateRoomInfo(room.Id, api.RoomInfo{NumFlags: 0})
 	c.assertResponse(http.StatusForbidden)
 
 	c.setCurrentUser(u1.VoterId)
-	info = c.updateRoomInfo(room.Id, api.RoomInfo{NumFlags:0})
+	info = c.updateRoomInfo(room.Id, api.RoomInfo{NumFlags: 0})
 	c.assertResponse(http.StatusForbidden)
 
 	c.setCurrentUser(owner.VoterId)
-	info = c.updateRoomInfo(room.Id, api.RoomInfo{NumFlags:0})
+	info = c.updateRoomInfo(room.Id, api.RoomInfo{NumFlags: 0})
 	c.assertResponse(http.StatusOK)
 
-
-
-	require.Equal(t,0,info.NumFlags)
+	require.Equal(t, 0, info.NumFlags)
 	info = c.getRoomInfo(room.Id)
-	require.Equal(t,0,info.NumFlags)
+	require.Equal(t, 0, info.NumFlags)
 }
