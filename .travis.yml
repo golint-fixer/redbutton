@@ -6,13 +6,9 @@ go:
 before_install:
   - cd server/src/redbutton
 install:
-  - go get code.google.com/p/go.tools/cmd/vet
-  - go get code.google.com/p/go.tools/cmd/cover
-  - go get github.com/golang/lint/golint
   - go get -d -v ./... && go build -v ./...
 
 script:
   - go vet -x ./...
-  - $GOPATH/bin/golint ./...
   - go test -v ./...
   - go test -covermode=count -coverprofile=profile.cov .
