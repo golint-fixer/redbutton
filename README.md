@@ -1,5 +1,9 @@
+[![Build][Build-Status-Image]][Build-Status-Url]
+[![License][License-Image]][License-Url]
+[![ReportCard][ReportCard-Image]][ReportCard-Url]
+[![Release][Release-Image]][Release-Url]
+
 # redbutton
-[![Build Status](https://travis-ci.org/viktorasm/redbutton.svg?branch=master)](https://travis-ci.org/viktorasm/redbutton)
 
 ## The problem
 Yet another meeting is steering into the wrong direction. Two people have a heated discussion while the other four
@@ -16,3 +20,13 @@ Not yet available
 
 ## About
 It's really just another playground of mine.
+
+
+[License-Url]: https://raw.githubusercontent.com/viktorasm/redbutton/master/LICENSE
+[License-Image]: https://img.shields.io/:license-mit-blue.svg
+[ReportCard-Url]: http://goreportcard.com/report/viktorasm/redbutton
+[ReportCard-Image]: http://goreportcard.com/badge/viktorasm/redbutton
+[Build-Status-Url]: http://travis-ci.org/viktorasm/redbutton
+[Build-Status-Image]: https://travis-ci.org/viktorasm/redbutton.svg?branch=master
+[Release-Url]: https://github.com/viktorasm/redbutton/releases/tag/v0.1
+[Release-image]: http://img.shields.io/badge/release-v0.1-1eb0fc.svg
