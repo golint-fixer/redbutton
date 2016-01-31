@@ -7,9 +7,10 @@ import (
 	"math/rand"
 	"net/http"
 	"path/filepath"
-	"github.com/viktorasm/redbutton/server/api"
 	"strconv"
 	"strings"
+
+	"github.com/viktorasm/redbutton/server/api"
 
 	"github.com/gorilla/websocket"
 	"github.com/kelseyhightower/envconfig"
@@ -27,13 +28,13 @@ func uniqueID() string {
 	return fmt.Sprintf("%x", result)
 }
 
-type ServerConfig struct {
+type Config struct {
 	Port  string `envconfig:"PORT" default:"8081"`
 	UIDir string `envconfig:"UIDIR" default:"."`
 }
 
 type server struct {
-	ServerConfig
+	Config
 	rooms             *Rooms
 	websocketUpgrader websocket.Upgrader
 }
@@ -210,8 +211,8 @@ func (s *server) updateRoomInfo(c *api.HTTPHandlerContext) {
 	c.Result(room.calcRoomInfo())
 }
 
-func runServer(config ServerConfig) {
-	s := server{ServerConfig: config, rooms: newRoomsList()}
+func runServer(config Config) {
+	s := server{Config: config, rooms: newRoomsList()}
 
 	s.websocketUpgrader = websocket.Upgrader{}
 
@@ -223,7 +224,7 @@ func runServer(config ServerConfig) {
 }
 
 func Main() {
-	config := ServerConfig{}
+	config := Config{}
 	envconfig.Process("redbutton", &config)
 	config.UIDir, _ = filepath.Abs(config.UIDir)
 

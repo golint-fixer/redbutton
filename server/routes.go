@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+
 	"github.com/viktorasm/redbutton/server/api"
 
 	"github.com/gorilla/mux"

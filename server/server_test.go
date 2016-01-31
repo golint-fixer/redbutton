@@ -2,15 +2,16 @@ package server
 
 import (
 	"net/http"
-	"github.com/viktorasm/redbutton/server/api"
 	"testing"
 	"time"
+
+	"github.com/viktorasm/redbutton/server/api"
 
 	"github.com/jmcvetta/napping"
 	"github.com/stretchr/testify/require"
 )
 
-var testServerConfig = ServerConfig{
+var testServerConfig = Config{
 	Port: "9001",
 }
 

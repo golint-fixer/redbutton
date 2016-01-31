@@ -2,8 +2,9 @@ package server
 
 import (
 	"net/http"
-	"github.com/viktorasm/redbutton/server/api"
 	"testing"
+
+	"github.com/viktorasm/redbutton/server/api"
 
 	"github.com/gorilla/websocket"
 	"github.com/jmcvetta/napping"

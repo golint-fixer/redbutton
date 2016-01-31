@@ -1,8 +1,6 @@
 # build script: checks that .go files are properly formatted and import sections organized
 
-cd $GOPATH/src/redbutton
-
-unformattedFiles=`gofmt -l *`;
+unformattedFiles=`gofmt -l .`;
 
 
 if [ "$unformattedFiles" != '' ]
@@ -12,7 +10,7 @@ then
     exit 1;
 fi
 
-checkImports=`goimports -l *`;
+checkImports=`goimports -l .`;
 
 if [ "$checkImports" != '' ]
 then

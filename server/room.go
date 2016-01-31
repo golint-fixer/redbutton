@@ -1,8 +1,9 @@
 package server
 
 import (
-	"github.com/viktorasm/redbutton/server/api"
 	"sync"
+
+	"github.com/viktorasm/redbutton/server/api"
 )
 
 // RoomListenerMessageHandler - a type
