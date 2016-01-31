@@ -2,7 +2,8 @@ language: go
 
 go:
   - 1.5
-  - 1.6
+  - 1.5.3
+  - 1.6rc1
 
 install:
   - export GOPATH=$TRAVIS_BUILD_DIR/server
