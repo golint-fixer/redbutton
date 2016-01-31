@@ -4,7 +4,8 @@ go:
   - 1.5
 
 before_install:
-  - cp $TRAVIS_BUILD_DIR/server/src/redbutton $GOPATH/src/ -rf
+  - mv $TRAVIS_BUILD_DIR/server/src/redbutton $GOPATH/src/
+  - ls $GOPATH/src/
 install:
   - go get ./...
   - go build ./...
