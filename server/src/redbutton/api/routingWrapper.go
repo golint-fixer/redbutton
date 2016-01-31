@@ -2,8 +2,9 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 // RouteWrapper - Little helper to reduce some boilerplate when defining routes and their handlers

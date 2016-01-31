@@ -1,12 +1,13 @@
 package redbutton
 
 import (
-	"github.com/gorilla/websocket"
-	"github.com/jmcvetta/napping"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"redbutton/api"
 	"testing"
+
+	"github.com/gorilla/websocket"
+	"github.com/jmcvetta/napping"
+	"github.com/stretchr/testify/require"
 )
 
 type APIClient struct {

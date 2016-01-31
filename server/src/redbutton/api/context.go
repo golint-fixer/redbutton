@@ -2,8 +2,9 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 // HTTPHandlerContext provides methods for parsing JSON request, and sending responses

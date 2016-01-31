@@ -3,8 +3,6 @@ package redbutton
 import (
 	"crypto/sha256"
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/kelseyhightower/envconfig"
 	"log"
 	"math/rand"
 	"net/http"
@@ -12,6 +10,9 @@ import (
 	"redbutton/api"
 	"strconv"
 	"strings"
+
+	"github.com/gorilla/websocket"
+	"github.com/kelseyhightower/envconfig"
 )
 
 // generate a random ID

@@ -1,9 +1,10 @@
 package redbutton
 
 import (
-	"github.com/gorilla/mux"
 	"net/http"
 	"redbutton/api"
+
+	"github.com/gorilla/mux"
 )
 
 func makeRoutes(s *server) http.Handler {

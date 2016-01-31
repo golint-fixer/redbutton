@@ -1,12 +1,13 @@
 package redbutton
 
 import (
-	"github.com/jmcvetta/napping"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"redbutton/api"
 	"testing"
 	"time"
+
+	"github.com/jmcvetta/napping"
+	"github.com/stretchr/testify/require"
 )
 
 var testServerConfig = ServerConfig{
