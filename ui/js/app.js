@@ -7,7 +7,7 @@ app = angular.module('redButtonApp', [
 app.config(function($stateProvider){
   $stateProvider
     .state('index', {
-      url: "",
+      url: "/",
       templateUrl: "pages/new-room.html",
       controller: "newRoomCtrl"
     })
@@ -18,3 +18,7 @@ app.config(function($stateProvider){
     })
 
 })
+
+app.run(['$state', function ($state) {
+   $state.transitionTo('index');
+}])

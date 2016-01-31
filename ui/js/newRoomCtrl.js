@@ -1,6 +1,8 @@
 app.controller('newRoomCtrl', function ($scope, $http, $state) {
     $scope.room = {name:""}
 
+    $scope.setTitle("New Room")
+
     function setError(error){
         $scope.errorMessage = error
     }

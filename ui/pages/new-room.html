@@ -1,12 +1,40 @@
+<h1>RedButton</h1>
+
+
 <div class="row">
-    <div class="col-md-6 col-md-offset-3" style="margin-top: 50pt">
-        <div class="alert alert-danger" role="alert" ng-if="errorMessage"><strong>Error: </strong> {{errorMessage}}</div>
-        <form ng-submit="createRoom()">
-            <div class="form-group">
-                <label for="roomName">Room Name</label>
-                <input type="text" class="form-control" id="roomName" placeholder="room name" ng-model="room.name">
-            </div>
-            <button type="submit" class="btn btn-default">Create room</button>
-        </form>
+    <div class="col-md-6">
+        <h2>The problem</h2>
+
+        <p>
+            Yet another meeting is steering into the wrong direction. Two people have a heated discussion while the other
+            four wish we could just proceed to the next thing in the agenda.
+        </p>
+
+        <h2>The idea</h2>
+
+        <p>
+            Whole team joins an online "room" anonymously. Each participant can either thumbs-up or thumbs-down the current
+            course of the meeting. Total score of thumb-downs is displayed, and it's up for a team to have some ground rules
+            how to deal with that. Do we stop and change topic after there are 3 thumb-downs on the screen?
+        </p>
+    </div>
+
+    <div class="col-md-6">
+
+        <div class="well" style="margin-top: 3em">
+                <p>Give a room a meaningful name, click create, then share the URL with other participants.</p>
+
+                <div class="alert alert-danger" role="alert" ng-if="errorMessage"><strong>Error: </strong>
+                    {{errorMessage}}
+                </div>
+                <form ng-submit="createRoom()">
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="roomName" placeholder="room name"
+                               ng-model="room.name">
+                    </div>
+                    <button type="submit" class="btn btn-success">Create room</button>
+                </form>
+        </div>
+
     </div>
 </div>

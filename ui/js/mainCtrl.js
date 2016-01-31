@@ -24,4 +24,8 @@ app.controller('mainCtrl', function ($scope, $http, $cookies) {
         $scope.title = title
     }
 
+    $scope.setProjectorMode = function(projectorMode) {
+        $scope.projectorMode = projectorMode
+    }
+
 })

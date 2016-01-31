@@ -2,7 +2,7 @@ app.controller('roomCtrl', function ($scope, $http, $websocket, $stateParams, $s
     var roomId = $stateParams.roomId
 
     $scope.roomId = roomId
-    $scope.projectorMode = $stateParams['projector-mode']=='yes'
+    $scope.setProjectorMode($stateParams['projector-mode']=='yes')
 
     $scope.roomInfo = null // updated after even from websocket
     $scope.voterStatus = null // updated after updateVoterRoomStatus() call
