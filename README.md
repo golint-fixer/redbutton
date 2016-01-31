@@ -27,6 +27,6 @@ It's really just another playground of mine.
 [ReportCard-Url]: http://goreportcard.com/report/viktorasm/redbutton
 [ReportCard-Image]: http://goreportcard.com/badge/viktorasm/redbutton
 [Build-Status-Url]: http://travis-ci.org/viktorasm/redbutton
-[Build-Status-Image]: https://travis-ci.org/viktorasm/redbutton.svg?branch=master
+[Build-Status-Image]: https://img.shields.io/travis/viktorasm/redbutton.svg
 [Release-Url]: https://github.com/viktorasm/redbutton/releases/tag/v0.1
 [Release-image]: http://img.shields.io/badge/release-v0.1-1eb0fc.svg
