@@ -3,9 +3,8 @@ language: go
 go:
   - 1.5
 
-before_install:
-  - export GOPATH=$TRAVIS_BUILD_DIR/server
 install:
+  - export GOPATH=$TRAVIS_BUILD_DIR/server
   - cd $GOPATH/src/redbutton
   - go get -t ./...
   - go build ./...
