@@ -26,4 +26,4 @@ def goInvocation(*args):
         exit(return_code)
 
 goInvocation("get", "./...")
-goInvocation('build', '-o', serviceBinary, 'github.com/viktorasm/redbutton/server/main')
+goInvocation('build', '-o', serviceBinary, 'github.com/viktorasm/redbutton')
