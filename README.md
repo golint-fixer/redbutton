@@ -1,4 +1,5 @@
 # redbutton
+[![Build Status](https://travis-ci.org/viktorasm/redbutton.svg?branch=master)](https://travis-ci.org/viktorasm/redbutton)
 
 ## The problem
 Yet another meeting is steering into the wrong direction. Two people have a heated discussion while the other four
