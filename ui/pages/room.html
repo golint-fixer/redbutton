@@ -20,7 +20,7 @@
             </div>
         </div>
     </div>
-    <div class="row">
+    <div class="row" ng-if="!projectorMode">
         <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3">
             <div class="col-sm-6">
                 <a href ng-click="setHappy(true)" class="btn btn-success btn-lg btn-block btn-vote" ng-class="{disabled: voterStatus.happy}">
@@ -34,5 +34,16 @@
             </div>
         </div>
     </div>
+    <div class="row text-center" ng-if="!projectorMode" style="margin-top: 3em">
+        <div class="btn-group">
+            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                More stuff <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+                <li><a ui-sref="room-detail({roomId: roomId, 'projector-mode': 'yes'})" class="text-muted" target="_blank">Open room in projector mode</a></li>
+            </ul>
+        </div>
+    </div>
+
 
 </div>

@@ -1,6 +1,8 @@
 app.controller('roomCtrl', function ($scope, $http, $websocket, $stateParams, $state) {
-    console.log("rebuilding room ctrl")
     var roomId = $stateParams.roomId
+
+    $scope.roomId = roomId
+    $scope.projectorMode = $stateParams['projector-mode']=='yes'
 
     $scope.roomInfo = null // updated after even from websocket
     $scope.voterStatus = null // updated after updateVoterRoomStatus() call
@@ -9,7 +11,6 @@ app.controller('roomCtrl', function ($scope, $http, $websocket, $stateParams, $s
     $http.get("api/room/"+roomId).then(
     function (res){
         // room exists? start listening for room events
-        console.log("processing room events!")
         startProcessingRoomEvents()
     },
     function (err){

@@ -12,7 +12,7 @@ app.config(function($stateProvider){
       controller: "newRoomCtrl"
     })
     .state('room-detail', {
-      url: "/room/:roomId",
+      url: "/room/:roomId?projector-mode",
       templateUrl: "pages/room.html",
       controller: "roomCtrl"
     })

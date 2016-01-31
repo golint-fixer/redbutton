@@ -65,8 +65,7 @@ func (this *Room) unregisterListener(listener *RoomListener) {
 	this.notifyStatusChanged()
 }
 
-// TODO: http layer ideally should not be in this file at all
-func (this *Room) asJson() *api.RoomInfo {
+func (this *Room) calcRoomInfo() *api.RoomInfo {
 	// collect IDs of active voters
 	activeVoters := map[VoterId]bool{}
 	for listener, _ := range this.listeners {
@@ -95,7 +94,7 @@ func (this *Room) asJson() *api.RoomInfo {
 // builds and sends out a RoomStatusChangeEvent to this room
 func (this *Room) notifyStatusChanged() {
 	this.RLock()
-	msg := this.asJson()
+	msg := this.calcRoomInfo()
 	this.RUnlock()
 	this.broadcastMessage(msg)
 }
