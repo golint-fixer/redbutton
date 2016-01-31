@@ -15,7 +15,7 @@ course of the meeting. Total score of thumb-downs is displayed, and it's up for 
 how to deal with that. Do we stop and change topic after there are 3 thumb-downs on the screen? 
 
 ## Live demo
-Not yet available
+Sometimes deployed on my free [AWS](http://redbutton.never-crashed.com) account.
 
 ## About
 It's really just another playground of mine.
