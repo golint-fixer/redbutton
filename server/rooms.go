@@ -1,4 +1,4 @@
-package redbutton
+package server
 
 import (
 	"sync"

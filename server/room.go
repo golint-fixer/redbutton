@@ -1,7 +1,7 @@
-package redbutton
+package server
 
 import (
-	"redbutton/api"
+	"github.com/viktorasm/redbutton/server/api"
 	"sync"
 )
 

@@ -1,4 +1,4 @@
-package redbutton
+package server
 
 import (
 	"crypto/sha256"
@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"path/filepath"
-	"redbutton/api"
+	"github.com/viktorasm/redbutton/server/api"
 	"strconv"
 	"strings"
 

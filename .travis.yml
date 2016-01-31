@@ -8,17 +8,13 @@ go:
   - 1.6rc1
 
 install:
-  - export GOPATH=$TRAVIS_BUILD_DIR/server
-  - export PATH=$GOPATH/bin:$PATH
   - go get -u github.com/golang/lint/golint
   - go get -u golang.org/x/tools/cmd/goimports
-  - cd $GOPATH/src/redbutton
   - go get -t ./...
   - go build ./...
 
 script:
-  - cd $GOPATH/src/redbutton
-  - ../../../ci-scripts/check-formatting.sh
-  - ../../../ci-scripts/check-linter-errors.sh
+  - ./ci-scripts/check-formatting.sh
+  - ./ci-scripts/check-linter-errors.sh
   - go vet -x ./...
   - go test -v ./...

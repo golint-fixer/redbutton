@@ -1,8 +1,8 @@
-package redbutton
+package server
 
 import (
 	"net/http"
-	"redbutton/api"
+	"github.com/viktorasm/redbutton/server/api"
 
 	"github.com/gorilla/mux"
 )

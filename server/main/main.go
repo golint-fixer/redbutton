@@ -1,8 +1,8 @@
 // dummy package to export executable's main()
 package main
 
-import "redbutton"
+import "github.com/viktorasm/redbutton/server"
 
 func main() {
-	redbutton.Main()
+	server.Main()
 }
