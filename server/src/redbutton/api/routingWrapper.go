@@ -38,9 +38,14 @@ func (this *RouteWrapper) Delete(path string, handler func(c *HttpHandlerContext
 func wrapHandlerToConventional(handler func(c *HttpHandlerContext)) func(resp http.ResponseWriter, req *http.Request) {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		context := NewHandler(req)
+		defer println("[", req.Method, "] " + req.RequestURI, context.status)
+
 		handler(context)
 
-		defer println("[", req.Method, "] " + req.RequestURI, context.status)
+		if context.result==nil {
+			context.Error(http.StatusInternalServerError,"response was not created")
+		}
+
 
 		result, err := json.MarshalIndent(context.result, "", "  ")
 		if err == nil {

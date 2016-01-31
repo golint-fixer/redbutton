@@ -66,11 +66,14 @@ func (this *Room) unregisterListener(listener *RoomListener) {
 }
 
 func (this *Room) calcRoomInfo() *api.RoomInfo {
+	this.RLock()
+	defer this.RUnlock()
 	// collect IDs of active voters
 	activeVoters := map[VoterId]bool{}
 	for listener, _ := range this.listeners {
 		activeVoters[listener.voterId] = true
 	}
+
 
 	// count votes of active unhappy voters
 	numUnhappy := 0
@@ -81,6 +84,8 @@ func (this *Room) calcRoomInfo() *api.RoomInfo {
 			}
 		}
 	}
+
+
 
 	return &api.RoomInfo{
 		Id:              this.id,
@@ -93,9 +98,7 @@ func (this *Room) calcRoomInfo() *api.RoomInfo {
 
 // builds and sends out a RoomStatusChangeEvent to this room
 func (this *Room) notifyStatusChanged() {
-	this.RLock()
 	msg := this.calcRoomInfo()
-	this.RUnlock()
 	this.broadcastMessage(msg)
 }
 
@@ -111,6 +114,16 @@ func (this *Room) broadcastMessage(message interface{}) {
 func (this *Room) setHappy(voterId VoterId, happy bool) {
 	this.Lock()
 	this.voters[voterId] = happy
+	this.Unlock()
+
+	this.notifyStatusChanged()
+}
+
+func (this *Room) setAllToHappy(){
+	this.Lock()
+	for key,_ := range this.voters {
+		this.voters[key] = true
+	}
 	this.Unlock()
 
 	this.notifyStatusChanged()

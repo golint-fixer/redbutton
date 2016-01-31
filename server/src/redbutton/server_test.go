@@ -131,3 +131,45 @@ func TestRandomIds(t *testing.T) {
 		require.InEpsilon(t, expectedRatio, float32(value)/float32(totalCharCount), 0.1)
 	}
 }
+
+
+func TestResetVotes(t *testing.T) {
+	c := newApiClient(t)
+	owner := c.login()
+	u1 := c.login()
+	u2 := c.login()
+	u3 := c.login()
+	room := c.createNewRoom(api.RoomInfo{RoomName: "room X", RoomOwner: owner.VoterId})
+	c.assertResponse(201)
+
+	// all participants have to listen for events so that their vote counts to room status
+	c.listenForEvents(room.Id,u1.VoterId)
+	c.listenForEvents(room.Id,u2.VoterId)
+	c.listenForEvents(room.Id,u2.VoterId)
+
+
+	c.updateVoterStatus(room.Id,u1.VoterId,api.VoterStatus{Happy: false})
+	c.updateVoterStatus(room.Id,u2.VoterId,api.VoterStatus{Happy: false})
+	c.updateVoterStatus(room.Id,u3.VoterId,api.VoterStatus{Happy: true})
+
+	info := c.getRoomInfo(room.Id)
+	require.Equal(t,2,info.NumFlags)
+
+	// this request requires current user header, and it has to be a room owner
+	info = c.updateRoomInfo(room.Id, api.RoomInfo{NumFlags:0})
+	c.assertResponse(http.StatusForbidden)
+
+	c.setCurrentUser(u1.VoterId)
+	info = c.updateRoomInfo(room.Id, api.RoomInfo{NumFlags:0})
+	c.assertResponse(http.StatusForbidden)
+
+	c.setCurrentUser(owner.VoterId)
+	info = c.updateRoomInfo(room.Id, api.RoomInfo{NumFlags:0})
+	c.assertResponse(http.StatusOK)
+
+
+
+	require.Equal(t,0,info.NumFlags)
+	info = c.getRoomInfo(room.Id)
+	require.Equal(t,0,info.NumFlags)
+}

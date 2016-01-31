@@ -19,6 +19,7 @@ func makeRoutes(s *server) http.Handler {
 
 	r.Post("/api/room", s.createRoom)
 	r.Get("/api/room/{roomId}", s.getRoomInfo)
+	r.Post("/api/room/{roomId}", s.updateRoomInfo)
 	r.Get("/api/room/{roomId}/voter/{voterId}", s.getVoterStatus)
 	r.Post("/api/room/{roomId}/voter/{voterId}", s.handleChangeVoterStatus)
 	r.Router.Methods("GET").Path("/api/room/{roomId}/voter/{voterId}/events").HandlerFunc(s.roomEventListenerHandler)

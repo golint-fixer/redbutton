@@ -101,12 +101,20 @@ func (this *server) lookupRoomFromRequest(c *api.HttpHandlerContext) *Room {
 }
 
 func (this *server) getVoterIdFromRequest(c *api.HttpHandlerContext) VoterId {
+	// try path param
 	voterId := c.PathParam("voterId")
-	if voterId == "" {
-		c.Error(http.StatusBadRequest, "voter ID missing")
-		return ""
+	if voterId!="" {
+		return VoterId(voterId)
 	}
-	return VoterId(voterId)
+
+	// try header
+	voterId = c.Req.Header.Get("voter-id")
+	if voterId!="" {
+		return VoterId(voterId)
+	}
+
+	c.Error(http.StatusBadRequest, "voter ID missing")
+	return ""
 }
 
 
@@ -172,7 +180,36 @@ func (this *server) getRoomInfo(c *api.HttpHandlerContext) {
 	c.Result(room.calcRoomInfo())
 }
 
+func (this *server) updateRoomInfo(c *api.HttpHandlerContext) {
+	room := this.lookupRoomFromRequest(c)
+	if room == nil {
+		return
+	}
 
+	currentUser := this.getVoterIdFromRequest(c)
+
+	update := api.RoomInfo{
+		NumFlags: -1, // unspecified
+	}
+
+	if !c.ParseRequest(&update) {
+		return
+	}
+
+	if (update.NumFlags==0) {
+		// request to reset flags to zero
+		if currentUser!=room.owner {
+			c.Error(http.StatusForbidden,"operation allowed for room owners only")
+			return
+		}
+
+
+		room.setAllToHappy()
+	}
+
+
+	c.Result(room.calcRoomInfo())
+}
 
 func runServer(config ServerConfig) {
 	s := server{ServerConfig: config, rooms: newRoomsList()}
