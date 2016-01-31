@@ -5,6 +5,7 @@ go:
 
 install:
   - export GOPATH=$TRAVIS_BUILD_DIR/server
+  - export PATH=$GOPATH/bin:$PATH
   - go get -u github.com/golang/lint/golint
   - cd $GOPATH/src/redbutton
   - go get -t ./...
