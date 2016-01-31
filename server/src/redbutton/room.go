@@ -37,20 +37,12 @@ func NewRoom() *Room {
 	}
 }
 
-func (this *Room) ensureVoterPresent(voterId VoterId) {
-	// voters are by default happy
-	if _, ok := this.voters[voterId]; !ok {
-		this.voters[voterId] = true
-	}
-}
-
 func (this *Room) createListener(voterId VoterId, handler RoomListenerMessageHandler) *RoomListener {
 
 	listener := &RoomListener{voterId: voterId, messageHandler: handler}
 
 	this.Lock()
 	this.listeners[listener] = true
-	this.ensureVoterPresent(voterId)
 	this.Unlock()
 
 	this.notifyStatusChanged()
@@ -92,7 +84,6 @@ func (this *Room) calcRoomInfo() *api.RoomInfo {
 		RoomName:        this.name,
 		NumFlags:        numUnhappy,
 		NumParticipants: len(activeVoters),
-		RoomOwner:       string(this.owner),
 	}
 }
 
@@ -131,7 +122,10 @@ func (this *Room) setAllToHappy(){
 
 func (this *Room) getVoterStatus(voterId VoterId) *api.VoterStatus {
 	result := api.VoterStatus{}
-	this.ensureVoterPresent(voterId)
-	result.Happy = this.voters[voterId]
+	result.Happy = true
+	if happy,ok := this.voters[voterId]; ok {
+		result.Happy = happy
+	}
+	result.IsOwner = voterId==this.owner
 	return &result
 }

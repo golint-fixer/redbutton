@@ -33,19 +33,11 @@ func TestInvalidRoomId(t *testing.T) {
 	require.Equal(t, resp.Status(), 404)
 }
 
-func TestLowercaseApi(t *testing.T) {
-	result := map[string]interface{}{}
-	c := newApiClient(t)
-	resp, err := napping.Post(c.serviceEndpoint+"/room", map[string]string{"name": "whatever"}, &result, nil)
-	require.NoError(t, err)
-	require.Equal(t, resp.Status(), 201)
-	require.Equal(t, "whatever", result["name"])
-}
-
 func TestGetVoterStatus(t *testing.T) {
 	c := newApiClient(t)
 	loginResponse := c.login()
-	room := c.createNewRoom(api.RoomInfo{RoomName: "another room", RoomOwner: loginResponse.VoterId})
+	c.setCurrentUser(loginResponse.VoterId)
+	room := c.createNewRoom(api.RoomInfo{RoomName: "another room"})
 
 	{
 		// get voter status: happy by default
@@ -70,24 +62,24 @@ func TestGetVoterStatus(t *testing.T) {
 func TestNewRoom(t *testing.T) {
 	c := newApiClient(t)
 	loginResponse := c.login()
-	result := c.createNewRoom(api.RoomInfo{RoomName: "another room", RoomOwner: loginResponse.VoterId})
+	c.setCurrentUser(loginResponse.VoterId)
+	result := c.createNewRoom(api.RoomInfo{RoomName: "another room"})
 	c.assertResponse(201)
 	require.NotEqual(t, result.Id, "")
 	require.Equal(t, result.RoomName, "another room")
-	require.Equal(t, result.RoomOwner, loginResponse.VoterId)
 
 	result2 := c.getRoomInfo(result.Id)
 	require.Equal(t, result2.RoomName, "another room")
-	require.Equal(t, result2.RoomOwner, loginResponse.VoterId)
 
-	_ = c.createNewRoom(api.RoomInfo{RoomName: "", RoomOwner: loginResponse.VoterId})
+	_ = c.createNewRoom(api.RoomInfo{RoomName: ""})
 	c.assertResponse(http.StatusBadRequest)
 }
 
 func TestListenForRoomEvents(t *testing.T) {
 	c := newApiClient(t)
 	loginResponse := c.login()
-	room := c.createNewRoom(api.RoomInfo{RoomName: "another room", RoomOwner: loginResponse.VoterId})
+	c.setCurrentUser(loginResponse.VoterId)
+	room := c.createNewRoom(api.RoomInfo{RoomName: "another room"})
 	c.assertResponse(201)
 
 	conn := c.listenForEvents(room.Id, loginResponse.VoterId)
@@ -132,6 +124,18 @@ func TestRandomIds(t *testing.T) {
 	}
 }
 
+func TestIsOwner(t *testing.T) {
+	c := newApiClient(t)
+	owner := c.login()
+	u1 := c.login()
+	c.setCurrentUser(owner.VoterId)
+	room := c.createNewRoom(api.RoomInfo{RoomName: "room X"})
+
+	status := c.getVoterStatus(room.Id,owner.VoterId,http.StatusOK)
+	require.True(t,status.IsOwner)
+	status = c.getVoterStatus(room.Id,u1.VoterId,http.StatusOK)
+	require.False(t,status.IsOwner)
+}
 
 func TestResetVotes(t *testing.T) {
 	c := newApiClient(t)
@@ -139,7 +143,8 @@ func TestResetVotes(t *testing.T) {
 	u1 := c.login()
 	u2 := c.login()
 	u3 := c.login()
-	room := c.createNewRoom(api.RoomInfo{RoomName: "room X", RoomOwner: owner.VoterId})
+	c.setCurrentUser(owner.VoterId)
+	room := c.createNewRoom(api.RoomInfo{RoomName: "room X"})
 	c.assertResponse(201)
 
 	// all participants have to listen for events so that their vote counts to room status
@@ -154,6 +159,9 @@ func TestResetVotes(t *testing.T) {
 
 	info := c.getRoomInfo(room.Id)
 	require.Equal(t,2,info.NumFlags)
+
+	// reset our client so we don't have current user set at all
+	c = newApiClient(t)
 
 	// this request requires current user header, and it has to be a room owner
 	info = c.updateRoomInfo(room.Id, api.RoomInfo{NumFlags:0})

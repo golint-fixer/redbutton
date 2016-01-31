@@ -158,6 +158,12 @@ func (this *server) createRoom(c *api.HttpHandlerContext) {
 	if !c.ParseRequest(&info) {
 		return
 	}
+	voterId := this.getVoterIdFromRequest(c)
+	if voterId=="" {
+		return
+	}
+
+
 	info.RoomName = strings.TrimSpace(info.RoomName)
 	if info.RoomName == "" {
 		c.Error(http.StatusBadRequest, "Room name is missing")
@@ -165,7 +171,7 @@ func (this *server) createRoom(c *api.HttpHandlerContext) {
 	}
 
 	room := this.rooms.newRoom()
-	room.owner = VoterId(info.RoomOwner)
+	room.owner = voterId
 	room.name = info.RoomName
 
 	c.Status(http.StatusCreated).Result(room.calcRoomInfo())

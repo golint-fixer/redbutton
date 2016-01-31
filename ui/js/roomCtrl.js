@@ -25,7 +25,7 @@ app.controller('roomCtrl', function ($scope, $http, $websocket, $stateParams, $s
             return
 
         $http.get("api/room/"+roomId+"/voter/"+$scope.voterId).then(function (res){
-            $scope.voterStatus = {happy:res.data.happy}
+            $scope.voterStatus=res.data;
         })
     }
 
@@ -69,7 +69,12 @@ app.controller('roomCtrl', function ($scope, $http, $websocket, $stateParams, $s
             return;
 
         $http.post("api/room/"+roomId+"/voter/"+$scope.voterId,{happy:happy}).then(function (res){
-            $scope.voterStatus = {happy:res.data.happy}
+            $scope.voterStatus=res.data;
+        })
+    }
+
+    $scope.resetHappy = function(){
+        $http.post("api/room/"+roomId,{marks:0},{headers:{'voter-id':$scope.voterId}}).then(function (res){
             $scope.voterStatus=res.data;
         })
     }

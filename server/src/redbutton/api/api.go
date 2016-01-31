@@ -3,6 +3,9 @@ package api
 type (
 	VoterStatus struct {
 		Happy bool `json:"happy"`
+
+		// returns true if voter is current owner of the room
+		IsOwner bool `json:"owner"`
 	}
 
 	LoginResponse struct {
@@ -14,6 +17,5 @@ type (
 		RoomName        string `json:"name"`
 		NumParticipants int    `json:"participants"`
 		NumFlags        int    `json:"marks"`
-		RoomOwner       string `json:"owner"`
 	}
 )

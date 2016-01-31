@@ -37,10 +37,11 @@
     <div class="row text-center" ng-if="!projectorMode" style="margin-top: 3em">
         <div class="btn-group">
             <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                More stuff <span class="caret"></span>
+                More actions <span class="caret"></span>
             </button>
             <ul class="dropdown-menu">
-                <li><a ui-sref="room-detail({roomId: roomId, 'projector-mode': 'yes'})" class="text-muted" target="_blank">Open room in projector mode</a></li>
+                <li><a ui-sref="room-detail({roomId: roomId, 'projector-mode': 'yes'})" target="_blank">Open room in projector mode</a></li>
+                <li ng-if="voterStatus.owner"><a href ng-click="resetHappy()">(Owner) Reset happy status</a></li>
             </ul>
         </div>
     </div>
