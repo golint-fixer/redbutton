@@ -6,5 +6,7 @@
   tasks:
     - name: run build
       command: python build/build.py
-      environment:
-        GOROOT: /home/uiron/apps/go1.5
+    - name: update Bower dependencies
+      command: bower install
+      args:
+        chdir: ../ui

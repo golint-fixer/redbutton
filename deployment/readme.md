@@ -9,11 +9,12 @@ High level instructions for performing deployment to AWS.
   $ source venv/bin/activate
   ```
 
-* Install Ansible & Boto
+* Install Ansible & other required libs
 
   ```
   $ pip install ansible
   $ pip install boto
+  $ pip install six
   ```
 
 * configure AWS API credentials in Boto - `~/.boto` file worked fine:

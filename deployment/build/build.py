@@ -3,23 +3,22 @@ import subprocess
 
 # obtain GOROOT (go installation root folder) from environment variable
 goRoot = os.environ['GOROOT']
+
+# assume gopath is in place
+goPath = os.environ['GOPATH']
 goBinary = goRoot+"/bin/go"
 
 # find project roots relatively
 projectRoot = os.path.abspath(os.path.dirname(__file__)+"../../..")
-goWorkspace = projectRoot+"/server"
 buildOutputRoot = projectRoot+"/bin"
 
 # output binary for server
 serviceBinary = buildOutputRoot+"/redbutton-server"
 
 
-
 def goInvocation(*args):
-    environment = dict(os.environ)
-    environment['GOPATH'] = goWorkspace
     args = [goBinary]+list(args)
-    result = subprocess.Popen(args, env=environment, cwd=goWorkspace+"/src/redbutton")
+    result = subprocess.Popen(args, cwd=projectRoot)
     result.communicate()
     return_code = result.returncode
     if return_code != 0:
@@ -27,4 +26,4 @@ def goInvocation(*args):
         exit(return_code)
 
 goInvocation("get", "./...")
-goInvocation('build', '-o', serviceBinary, 'redbutton/main')
+goInvocation('build', '-o', serviceBinary, 'github.com/viktorasm/redbutton/server/main')
