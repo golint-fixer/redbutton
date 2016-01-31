@@ -1,3 +1,5 @@
+# build script: checks that .go files are properly formatted and import sections organized
+
 cd $GOPATH/src/redbutton
 
 unformattedFiles=`gofmt -l *`;
