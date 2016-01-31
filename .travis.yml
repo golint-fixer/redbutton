@@ -4,8 +4,7 @@ go:
   - 1.5
 
 install:
-  - cd $HOME/server
-  - export GOPATH=`pwd`
+  - cp $GOPATH/src/github.com/viktorasm/redbutton/server/src $GOPATH/src/
   - go get code.google.com/p/go.tools/cmd/vet
   - go get code.google.com/p/go.tools/cmd/cover
   - go get github.com/golang/lint/golint
