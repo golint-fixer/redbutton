@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-type ApiClient struct {
+type APIClient struct {
 	serviceEndpoint string
 	wsEndpoint      string
 	t               *testing.T
@@ -18,8 +18,8 @@ type ApiClient struct {
 	session         napping.Session
 }
 
-func newApiClient(t *testing.T) *ApiClient {
-	result := &ApiClient{
+func newAPIClient(t *testing.T) *APIClient {
+	result := &APIClient{
 		t:               t,
 		serviceEndpoint: "http://0.0.0.0:" + testServerConfig.Port + "/api",
 		wsEndpoint:      "ws://0.0.0.0:" + testServerConfig.Port + "/api",
@@ -29,63 +29,63 @@ func newApiClient(t *testing.T) *ApiClient {
 }
 
 // remember request status
-func (this *ApiClient) remember(response *napping.Response, err error) {
-	this.lastResponse = response
-	this.lastError = err
+func (c *APIClient) remember(response *napping.Response, err error) {
+	c.lastResponse = response
+	c.lastError = err
 }
 
-func (this *ApiClient) assertResponse(expectedHttpCode int) {
-	require.NoError(this.t, this.lastError)
-	require.Equal(this.t, expectedHttpCode, this.lastResponse.Status(), this.lastResponse.RawText())
+func (c *APIClient) assertResponse(expectedHTTPCode int) {
+	require.NoError(c.t, c.lastError)
+	require.Equal(c.t, expectedHTTPCode, c.lastResponse.Status(), c.lastResponse.RawText())
 }
 
-func (this *ApiClient) login() api.LoginResponse {
+func (c *APIClient) login() api.LoginResponse {
 	result := api.LoginResponse{}
-	this.remember(this.session.Post(this.serviceEndpoint+"/login", &struct{}{}, &result, nil))
-	this.assertResponse(http.StatusOK)
+	c.remember(c.session.Post(c.serviceEndpoint+"/login", &struct{}{}, &result, nil))
+	c.assertResponse(http.StatusOK)
 	return result
 }
 
 // set current user header
-func (this *ApiClient) setCurrentUser(voterId string) {
-	this.session.Header.Set("voter-id", voterId)
+func (c *APIClient) setCurrentUser(voterID string) {
+	c.session.Header.Set("voter-id", voterID)
 }
 
-func (this *ApiClient) getVoterStatus(roomId string, voterId string, expectedCode int) api.VoterStatus {
+func (c *APIClient) getVoterStatus(roomID string, voterID string, expectedCode int) api.VoterStatus {
 	s := api.VoterStatus{}
-	this.remember(this.session.Get(this.serviceEndpoint+"/room/"+roomId+"/voter/"+voterId, nil, &s, nil))
-	this.assertResponse(expectedCode)
+	c.remember(c.session.Get(c.serviceEndpoint+"/room/"+ roomID +"/voter/"+ voterID, nil, &s, nil))
+	c.assertResponse(expectedCode)
 	return s
 }
 
-func (this *ApiClient) updateVoterStatus(roomId string, voterId string, update api.VoterStatus) api.VoterStatus {
+func (c *APIClient) updateVoterStatus(roomID string, voterID string, update api.VoterStatus) api.VoterStatus {
 	result := api.VoterStatus{}
-	this.remember(this.session.Post(this.serviceEndpoint+"/room/"+roomId+"/voter/"+voterId, &update, &result, nil))
-	this.assertResponse(200)
+	c.remember(c.session.Post(c.serviceEndpoint+"/room/"+ roomID +"/voter/"+ voterID, &update, &result, nil))
+	c.assertResponse(200)
 	return result
 }
 
-func (this *ApiClient) createNewRoom(info api.RoomInfo) api.RoomInfo {
+func (c *APIClient) createNewRoom(info api.RoomInfo) api.RoomInfo {
 	result := api.RoomInfo{}
-	this.remember(this.session.Post(this.serviceEndpoint+"/room", &info, &result, nil))
+	c.remember(c.session.Post(c.serviceEndpoint+"/room", &info, &result, nil))
 	return result
 }
 
-func (this *ApiClient) getRoomInfo(roomId string) api.RoomInfo {
+func (c *APIClient) getRoomInfo(roomID string) api.RoomInfo {
 	result := api.RoomInfo{}
-	this.remember(this.session.Get(this.serviceEndpoint+"/room/"+roomId, nil, &result, nil))
-	this.assertResponse(200)
+	c.remember(c.session.Get(c.serviceEndpoint+"/room/"+ roomID, nil, &result, nil))
+	c.assertResponse(200)
 	return result
 }
 
-func (this *ApiClient) updateRoomInfo(roomId string, update api.RoomInfo) api.RoomInfo {
+func (c *APIClient) updateRoomInfo(roomID string, update api.RoomInfo) api.RoomInfo {
 	result := api.RoomInfo{}
-	this.remember(this.session.Post(this.serviceEndpoint+"/room/"+roomId, &update, &result, nil))
+	c.remember(c.session.Post(c.serviceEndpoint+"/room/"+ roomID, &update, &result, nil))
 	return result
 }
 
-func (this *ApiClient) listenForEvents(roomId string, voterId string) *websocket.Conn {
-	conn, _, err := websocket.DefaultDialer.Dial(this.wsEndpoint+"/room/"+roomId+"/voter/"+voterId+"/events", nil)
-	require.NoError(this.t, err)
+func (c *APIClient) listenForEvents(roomID string, voterID string) *websocket.Conn {
+	conn, _, err := websocket.DefaultDialer.Dial(c.wsEndpoint+"/room/"+ roomID +"/voter/"+ voterID +"/events", nil)
+	require.NoError(c.t, err)
 	return conn
 }

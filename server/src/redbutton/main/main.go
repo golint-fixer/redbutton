@@ -1,6 +1,4 @@
-/*
- dummy package to export executable's main()
-*/
+// dummy package to export executable's main()
 package main
 
 import "redbutton"

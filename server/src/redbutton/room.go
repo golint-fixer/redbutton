@@ -8,69 +8,69 @@ import (
 // RoomListenerMessageHandler - a type
 type RoomListenerMessageHandler func(msg interface{}) error
 
-type VoterId string
+type VoterID string
 
-// an entity that is interested in room events
+// RoomListener is an entity that is interested in room events
 // receives notifications via provided message handler
 type RoomListener struct {
-	voterId        VoterId
+	voterID        VoterID
 	messageHandler RoomListenerMessageHandler
 }
 
 // notifies this room listener that there's a new event
-func (this *RoomListener) newEvent(message interface{}) {
-	this.messageHandler(message)
+func (l *RoomListener) newEvent(message interface{}) {
+	l.messageHandler(message)
 }
 
 type Room struct {
 	sync.RWMutex
 	id        string
 	name      string
-	owner     VoterId
+	owner     VoterID
 	listeners map[*RoomListener]bool
-	voters    map[VoterId]bool
+	voters    map[VoterID]bool
 }
 
 func NewRoom() *Room {
 	return &Room{
 		listeners: map[*RoomListener]bool{},
-		voters:    map[VoterId]bool{},
+		voters:    map[VoterID]bool{},
 	}
 }
 
-func (this *Room) createListener(voterId VoterId, handler RoomListenerMessageHandler) *RoomListener {
+func (room *Room) createListener(voterID VoterID, handler RoomListenerMessageHandler) *RoomListener {
 
-	listener := &RoomListener{voterId: voterId, messageHandler: handler}
+	listener := &RoomListener{voterID: voterID, messageHandler: handler}
 
-	this.Lock()
-	this.listeners[listener] = true
-	this.Unlock()
+	room.Lock()
+	room.listeners[listener] = true
+	room.Unlock()
 
-	this.notifyStatusChanged()
+	room.notifyStatusChanged()
 	return listener
 }
 
-func (this *Room) unregisterListener(listener *RoomListener) {
-	this.Lock()
-	delete(this.listeners, listener)
-	this.Unlock()
+func (room *Room) unregisterListener(listener *RoomListener) {
+	room.Lock()
+	delete(room.listeners, listener)
+	room.Unlock()
 
-	this.notifyStatusChanged()
+	room.notifyStatusChanged()
 }
 
-func (this *Room) calcRoomInfo() *api.RoomInfo {
-	this.RLock()
-	defer this.RUnlock()
+func (room *Room) calcRoomInfo() *api.RoomInfo {
+	room.RLock()
+	defer room.RUnlock()
 	// collect IDs of active voters
-	activeVoters := map[VoterId]bool{}
-	for listener, _ := range this.listeners {
-		activeVoters[listener.voterId] = true
+	activeVoters := map[VoterID]bool{}
+	for listener := range room.listeners {
+		activeVoters[listener.voterID] = true
 	}
 
 	// count votes of active unhappy voters
 	numUnhappy := 0
-	for voterId, happy := range this.voters {
-		if _, ok := activeVoters[voterId]; ok {
+	for voterID, happy := range room.voters {
+		if _, ok := activeVoters[voterID]; ok {
 			if !happy {
 				numUnhappy++
 			}
@@ -78,52 +78,52 @@ func (this *Room) calcRoomInfo() *api.RoomInfo {
 	}
 
 	return &api.RoomInfo{
-		Id:              this.id,
-		RoomName:        this.name,
+		ID:              room.id,
+		RoomName:        room.name,
 		NumFlags:        numUnhappy,
 		NumParticipants: len(activeVoters),
 	}
 }
 
 // builds and sends out a RoomStatusChangeEvent to this room
-func (this *Room) notifyStatusChanged() {
-	msg := this.calcRoomInfo()
-	this.broadcastMessage(msg)
+func (room *Room) notifyStatusChanged() {
+	msg := room.calcRoomInfo()
+	room.broadcastMessage(msg)
 }
 
 // broadcasts a message to all room listeners
-func (this *Room) broadcastMessage(message interface{}) {
-	this.RLock()
-	defer this.RUnlock()
-	for listener, _ := range this.listeners {
+func (room *Room) broadcastMessage(message interface{}) {
+	room.RLock()
+	defer room.RUnlock()
+	for listener := range room.listeners {
 		go listener.newEvent(message)
 	}
 }
 
-func (this *Room) setHappy(voterId VoterId, happy bool) {
-	this.Lock()
-	this.voters[voterId] = happy
-	this.Unlock()
+func (room *Room) setHappy(voterID VoterID, happy bool) {
+	room.Lock()
+	room.voters[voterID] = happy
+	room.Unlock()
 
-	this.notifyStatusChanged()
+	room.notifyStatusChanged()
 }
 
-func (this *Room) setAllToHappy() {
-	this.Lock()
-	for key, _ := range this.voters {
-		this.voters[key] = true
+func (room *Room) setAllToHappy() {
+	room.Lock()
+	for key := range room.voters {
+		room.voters[key] = true
 	}
-	this.Unlock()
+	room.Unlock()
 
-	this.notifyStatusChanged()
+	room.notifyStatusChanged()
 }
 
-func (this *Room) getVoterStatus(voterId VoterId) *api.VoterStatus {
+func (room *Room) getVoterStatus(voterID VoterID) *api.VoterStatus {
 	result := api.VoterStatus{}
 	result.Happy = true
-	if happy, ok := this.voters[voterId]; ok {
+	if happy, ok := room.voters[voterID]; ok {
 		result.Happy = happy
 	}
-	result.IsOwner = voterId == this.owner
+	result.IsOwner = voterID == room.owner
 	return &result
 }

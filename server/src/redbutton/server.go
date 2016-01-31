@@ -15,7 +15,7 @@ import (
 )
 
 // generate a random ID
-func uniqueId() string {
+func uniqueID() string {
 	h := sha256.New()
 
 	for i := 1; i < 10; i++ {
@@ -28,7 +28,7 @@ func uniqueId() string {
 
 type ServerConfig struct {
 	Port  string `envconfig:"PORT" default:"8081"`
-	UiDir string `envconfig:"UIDIR" default:"."`
+	UIDir string `envconfig:"UIDIR" default:"."`
 }
 
 type server struct {
@@ -40,27 +40,27 @@ type server struct {
 /**
 this handler reports room events into provided websocket connection
 */
-func (this *server) roomEventListenerHandler(resp http.ResponseWriter, req *http.Request) {
+func (s *server) roomEventListenerHandler(resp http.ResponseWriter, req *http.Request) {
 	c := api.NewHandler(req)
 
 	// get voter and room IDs; return on any error
-	voterId := this.getVoterIdFromRequest(c)
-	if voterId == "" {
+	voterID := s.getVoterIDFromRequest(c)
+	if voterID == "" {
 		return
 	}
-	room := this.lookupRoomFromRequest(c)
+	room := s.lookupRoomFromRequest(c)
 	if room == nil {
 		return
 	}
 
-	ws, err := this.websocketUpgrader.Upgrade(resp, req, nil)
+	ws, err := s.websocketUpgrader.Upgrade(resp, req, nil)
 	if err != nil {
 		c.Error(500, "failed to upgrade to websocket connection: "+err.Error())
 		return
 	}
 	defer ws.Close()
 
-	listener := room.createListener(voterId, func(msg interface{}) error {
+	listener := room.createListener(voterID, func(msg interface{}) error {
 		err := websocket.WriteJSON(ws, msg)
 		if err != nil {
 			log.Println("failed sending json: " + err.Error())
@@ -81,60 +81,60 @@ func (this *server) roomEventListenerHandler(resp http.ResponseWriter, req *http
 
 // finds room by ID from 'roomId' url parameter; if not found, sets
 // http handler to appropriate HTTP error and returns null
-func (this *server) lookupRoomFromRequest(c *api.HttpHandlerContext) *Room {
-	roomId := c.PathParam("roomId")
-	if roomId == "" {
+func (s *server) lookupRoomFromRequest(c *api.HTTPHandlerContext) *Room {
+	roomID := c.PathParam("roomId")
+	if roomID == "" {
 		c.Error(http.StatusBadRequest, "room ID not found")
 		return nil
 	}
 
-	room := this.rooms.findRoom(roomId)
+	room := s.rooms.findRoom(roomID)
 	if room == nil {
-		c.Error(http.StatusNotFound, "room "+roomId+" was not found")
+		c.Error(http.StatusNotFound, "room "+ roomID +" was not found")
 		return nil
 	}
 
 	return room
 }
 
-func (this *server) getVoterIdFromRequest(c *api.HttpHandlerContext) VoterId {
+func (s *server) getVoterIDFromRequest(c *api.HTTPHandlerContext) VoterID {
 	// try path param
-	voterId := c.PathParam("voterId")
-	if voterId != "" {
-		return VoterId(voterId)
+	voterID := c.PathParam("voterId")
+	if voterID != "" {
+		return VoterID(voterID)
 	}
 
 	// try header
-	voterId = c.Req.Header.Get("voter-id")
-	if voterId != "" {
-		return VoterId(voterId)
+	voterID = c.Req.Header.Get("voter-id")
+	if voterID != "" {
+		return VoterID(voterID)
 	}
 
 	c.Error(http.StatusBadRequest, "voter ID missing")
 	return ""
 }
 
-func (this *server) getVoterStatus(c *api.HttpHandlerContext) {
-	room := this.lookupRoomFromRequest(c)
+func (s *server) getVoterStatus(c *api.HTTPHandlerContext) {
+	room := s.lookupRoomFromRequest(c)
 	if room == nil {
 		return
 	}
 
-	voterId := this.getVoterIdFromRequest(c)
-	if voterId == "" {
+	voterID := s.getVoterIDFromRequest(c)
+	if voterID == "" {
 		return
 	}
 
-	c.Result(room.getVoterStatus(voterId))
+	c.Result(room.getVoterStatus(voterID))
 }
 
 // voter ID comes from request
-func (this *server) handleChangeVoterStatus(c *api.HttpHandlerContext) {
-	voterId := this.getVoterIdFromRequest(c)
-	if voterId == "" {
+func (s *server) handleChangeVoterStatus(c *api.HTTPHandlerContext) {
+	voterID := s.getVoterIDFromRequest(c)
+	if voterID == "" {
 		return
 	}
-	room := this.lookupRoomFromRequest(c)
+	room := s.lookupRoomFromRequest(c)
 	if room == nil {
 		return
 	}
@@ -144,17 +144,17 @@ func (this *server) handleChangeVoterStatus(c *api.HttpHandlerContext) {
 		return
 	}
 
-	room.setHappy(voterId, request.Happy)
-	this.getVoterStatus(c)
+	room.setHappy(voterID, request.Happy)
+	s.getVoterStatus(c)
 }
 
-func (this *server) createRoom(c *api.HttpHandlerContext) {
+func (s *server) createRoom(c *api.HTTPHandlerContext) {
 	info := api.RoomInfo{}
 	if !c.ParseRequest(&info) {
 		return
 	}
-	voterId := this.getVoterIdFromRequest(c)
-	if voterId == "" {
+	voterID := s.getVoterIDFromRequest(c)
+	if voterID == "" {
 		return
 	}
 
@@ -164,15 +164,15 @@ func (this *server) createRoom(c *api.HttpHandlerContext) {
 		return
 	}
 
-	room := this.rooms.newRoom()
-	room.owner = voterId
+	room := s.rooms.newRoom()
+	room.owner = voterID
 	room.name = info.RoomName
 
 	c.Status(http.StatusCreated).Result(room.calcRoomInfo())
 }
 
-func (this *server) getRoomInfo(c *api.HttpHandlerContext) {
-	room := this.lookupRoomFromRequest(c)
+func (s *server) getRoomInfo(c *api.HTTPHandlerContext) {
+	room := s.lookupRoomFromRequest(c)
 	if room == nil {
 		return
 	}
@@ -180,13 +180,13 @@ func (this *server) getRoomInfo(c *api.HttpHandlerContext) {
 	c.Result(room.calcRoomInfo())
 }
 
-func (this *server) updateRoomInfo(c *api.HttpHandlerContext) {
-	room := this.lookupRoomFromRequest(c)
+func (s *server) updateRoomInfo(c *api.HTTPHandlerContext) {
+	room := s.lookupRoomFromRequest(c)
 	if room == nil {
 		return
 	}
 
-	currentUser := this.getVoterIdFromRequest(c)
+	currentUser := s.getVoterIDFromRequest(c)
 
 	update := api.RoomInfo{
 		NumFlags: -1, // unspecified
@@ -224,9 +224,9 @@ func runServer(config ServerConfig) {
 func Main() {
 	config := ServerConfig{}
 	envconfig.Process("redbutton", &config)
-	config.UiDir, _ = filepath.Abs(config.UiDir)
+	config.UIDir, _ = filepath.Abs(config.UIDir)
 
-	fmt.Printf("config: port %s, ui: %s\n", config.Port, config.UiDir)
+	fmt.Printf("config: port %s, ui: %s\n", config.Port, config.UIDir)
 
 	runServer(config)
 }

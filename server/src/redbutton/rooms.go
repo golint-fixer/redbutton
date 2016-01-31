@@ -13,29 +13,29 @@ func newRoomsList() *Rooms {
 	return &Rooms{rooms: map[string]*Room{}}
 }
 
-func (this *Rooms) findRoom(id string) *Room {
-	this.RLock()
-	defer this.RUnlock()
+func (rooms *Rooms) findRoom(id string) *Room {
+	rooms.RLock()
+	defer rooms.RUnlock()
 
-	if room, ok := this.rooms[id]; ok {
+	if room, ok := rooms.rooms[id]; ok {
 		return room
 	}
 	return nil
 }
 
-func (this *Rooms) newRoom() *Room {
-	this.RWMutex.Lock()
-	defer this.Unlock()
+func (rooms *Rooms) newRoom() *Room {
+	rooms.RWMutex.Lock()
+	defer rooms.Unlock()
 
 	for {
-		id := uniqueId()[:16]
+		id := uniqueID()[:16]
 
-		if _, ok := this.rooms[id]; ok {
+		if _, ok := rooms.rooms[id]; ok {
 			continue
 		}
 
 		room := NewRoom()
-		this.rooms[id] = room
+		rooms.rooms[id] = room
 		room.id = id
 		return room
 	}

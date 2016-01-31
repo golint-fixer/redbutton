@@ -6,36 +6,37 @@ import (
 	"net/http"
 )
 
-// Little helper to reduce some boilerplate when defining routes and their handlers
+// RouteWrapper - Little helper to reduce some boilerplate when defining routes and their handlers
 type RouteWrapper struct {
 	Router *mux.Router
 }
 
+// NewRouteWrapper creates new RouteWrapper
 func NewRouteWrapper(router *mux.Router) *RouteWrapper {
 	return &RouteWrapper{Router: router}
 }
 
-func (this *RouteWrapper) Route(method string, path string, handler func(c *HttpHandlerContext)) {
-	this.Router.Path(path).Methods(method).HandlerFunc(wrapHandlerToConventional(handler))
+func (wrapper *RouteWrapper) Route(method string, path string, handler func(c *HTTPHandlerContext)) {
+	wrapper.Router.Path(path).Methods(method).HandlerFunc(wrapHandlerToConventional(handler))
 }
 
-func (this *RouteWrapper) Get(path string, handler func(c *HttpHandlerContext)) {
-	this.Route("GET", path, handler)
+func (wrapper *RouteWrapper) Get(path string, handler func(c *HTTPHandlerContext)) {
+	wrapper.Route("GET", path, handler)
 }
 
-func (this *RouteWrapper) Post(path string, handler func(c *HttpHandlerContext)) {
-	this.Route("POST", path, handler)
+func (wrapper *RouteWrapper) Post(path string, handler func(c *HTTPHandlerContext)) {
+	wrapper.Route("POST", path, handler)
 }
 
-func (this *RouteWrapper) Put(path string, handler func(c *HttpHandlerContext)) {
-	this.Route("PUT", path, handler)
+func (wrapper *RouteWrapper) Put(path string, handler func(c *HTTPHandlerContext)) {
+	wrapper.Route("PUT", path, handler)
 }
 
-func (this *RouteWrapper) Delete(path string, handler func(c *HttpHandlerContext)) {
-	this.Route("DELETE", path, handler)
+func (wrapper *RouteWrapper) Delete(path string, handler func(c *HTTPHandlerContext)) {
+	wrapper.Route("DELETE", path, handler)
 }
 
-func wrapHandlerToConventional(handler func(c *HttpHandlerContext)) func(resp http.ResponseWriter, req *http.Request) {
+func wrapHandlerToConventional(handler func(c *HTTPHandlerContext)) func(resp http.ResponseWriter, req *http.Request) {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		context := NewHandler(req)
 		defer println("[", req.Method, "] "+req.RequestURI, context.status)
