@@ -81,7 +81,7 @@ paths:
       parameters:
         - $ref: "#/parameters/roomId"
         - $ref: "#/parameters/voterId"
-        - name: newRoom
+        - name: voterStatus
           in: body
           required: true
           schema:
