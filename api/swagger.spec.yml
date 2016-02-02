@@ -81,6 +81,11 @@ paths:
       parameters:
         - $ref: "#/parameters/roomId"
         - $ref: "#/parameters/voterId"
+        - name: newRoom
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/voterStatus"
       responses:
         '200':
           description: "info about the room"
