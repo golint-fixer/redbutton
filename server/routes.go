@@ -26,6 +26,10 @@ func makeRoutes(s *server) http.Handler {
 	r.Get("/api/room/{roomId}/voter/{voterId}", s.getVoterStatus)
 	r.Post("/api/room/{roomId}/voter/{voterId}", s.handleChangeVoterStatus)
 	r.Router.Methods("GET").Path("/api/room/{roomId}/voter/{voterId}/events").HandlerFunc(s.roomEventListenerHandler)
+	m.PathPrefix("/swagger.spec.yml").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// serve our spec locally so it can be viewable from swagger-ui
+		http.ServeFile(w, r, "api/swagger.spec.yml")
+	})
 	m.PathPrefix("/").Handler(http.FileServer(http.Dir(s.UIDir)))
 
 	return m
