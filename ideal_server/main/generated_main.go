@@ -4,13 +4,25 @@
 
 package main
 import (
-	"github.com/viktorasm/redbutton/ideal_server"
+	"google.golang.org/grpc"
+	"net"
+	"log"
+	server "github.com/viktorasm/redbutton/ideal_server"
 )
 
 
+const (
+	port = ":50051"
+)
+
 
 func main(){
-	s := ideal_server.NewServer()
+	lis, err := net.Listen("tcp", port)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
 
-	_ = s
+	s := grpc.NewServer()
+	server.RegisterIdealServerServer(s, server.NewServer())
+	s.Serve(lis)
 }
